@@ -168,3 +168,27 @@ export async function fetchFutureLeadersData() {
     fees: fees.status === 'fulfilled' ? fees.value : null,
   }
 }
+
+export async function fetchYieldPools() {
+  const res = await fetch('https://api.llama.fi/pools')
+  if (!res.ok) throw new Error(`DeFiLlama pools: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchYieldAnalysisData() {
+  const [pools, treasury] = await Promise.allSettled([
+    fetchYieldPools(),
+    fetchYahooQuote('^IRX'),
+  ])
+
+  // Treasury yield from Yahoo Finance ^IRX (13-week T-Bill rate)
+  let treasuryYield = 4.5 // fallback
+  if (treasury.status === 'fulfilled' && treasury.value?.regularMarketPrice) {
+    treasuryYield = treasury.value.regularMarketPrice
+  }
+
+  return {
+    pools: pools.status === 'fulfilled' ? pools.value : [],
+    treasuryYield,
+  }
+}

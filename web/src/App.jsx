@@ -9,6 +9,7 @@ import FutureLeadersTab from './components/tabs/FutureLeadersTab'
 import MarketStructureTab from './components/tabs/MarketStructureTab'
 import MacroTab from './components/tabs/MacroTab'
 import OnChainEconomyTab from './components/tabs/OnChainEconomyTab'
+import YieldAnalysisTab from './components/tabs/YieldAnalysisTab'
 
 const TABS = [
   { id: 'valuations', label: 'Valuations & Multiples' },
@@ -19,6 +20,7 @@ const TABS = [
   { id: 'structure', label: 'Market Structure' },
   { id: 'macro', label: 'Macro Correlations' },
   { id: 'economy', label: 'On-Chain Economy' },
+  { id: 'yield', label: 'Yield Analysis' },
 ]
 
 const TAB_COMPONENTS = {
@@ -30,6 +32,7 @@ const TAB_COMPONENTS = {
   structure: MarketStructureTab,
   macro: MacroTab,
   economy: OnChainEconomyTab,
+  yield: YieldAnalysisTab,
 }
 
 export default function App() {

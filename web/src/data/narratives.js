@@ -71,3 +71,12 @@ export const futureLeadersNarrative = {
     'The immediate winners are not the agents themselves, but the infrastructure they pay to exist: Base compute/data networks (Render, Akash) and routing networks (Morpheus, Bittensor) have clear, predictable revenue models driven by agentic compute demand.',
   ],
 }
+
+export const yieldAnalysisNarrative = {
+  title: 'The DeFi Yield Landscape',
+  paragraphs: [
+    'The DeFi yield landscape reveals a fundamental truth: sustainable yields in crypto converge toward Treasury rates plus a risk premium. Pools offering >20% APY on stablecoins are either subsidized by token emissions (unsustainable), taking on smart contract risk, or running complex strategies.',
+    'The median stablecoin yield of {medianStable} vs Treasury at {treasuryYield} implies a crypto risk premium of {riskPremium}bps — this premium compensates for smart contract risk, bridge risk, and counterparty risk.',
+    'Higher yields almost always come with higher risk. The yield-TVL scatter shows this clearly: large, battle-tested pools offer modest yields, while smaller pools must offer premium APY to attract capital. This is rational market behavior — LPs demand compensation for illiquidity and smart contract risk.',
+  ],
+}
