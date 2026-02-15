@@ -1,3 +1,5 @@
+import { deduplicatedFetch } from './cache'
+
 // ============================================================
 // DeFiLlama (free, client-side)
 // ============================================================
@@ -6,52 +8,36 @@ const LLAMA_STABLES = 'https://stablecoins.llama.fi'
 const LLAMA_BRIDGES = 'https://bridges.llama.fi'
 
 export async function fetchFeesOverview() {
-  const res = await fetch(`${LLAMA_BASE}/overview/fees?excludeTotalDataChartBreakdown=false`)
-  if (!res.ok) throw new Error(`DeFiLlama fees: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`${LLAMA_BASE}/overview/fees?excludeTotalDataChartBreakdown=false`)
 }
 
 export async function fetchProtocolFees(protocol) {
-  const res = await fetch(`${LLAMA_BASE}/summary/fees/${protocol}?dataType=dailyRevenue`)
-  if (!res.ok) throw new Error(`DeFiLlama protocol fees: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`${LLAMA_BASE}/summary/fees/${protocol}?dataType=dailyRevenue`)
 }
 
 export async function fetchAllProtocols() {
-  const res = await fetch(`${LLAMA_BASE}/protocols`)
-  if (!res.ok) throw new Error(`DeFiLlama protocols: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`${LLAMA_BASE}/protocols`)
 }
 
 export async function fetchProtocolDetail(protocol) {
-  const res = await fetch(`${LLAMA_BASE}/protocol/${protocol}`)
-  if (!res.ok) throw new Error(`DeFiLlama protocol detail: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`${LLAMA_BASE}/protocol/${protocol}`)
 }
 
 export async function fetchStablecoins() {
-  const res = await fetch(`${LLAMA_STABLES}/stablecoins?includePrices=true`)
-  if (!res.ok) throw new Error(`Stablecoins: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`${LLAMA_STABLES}/stablecoins?includePrices=true`)
 }
 
 export async function fetchStablecoinCharts() {
-  const res = await fetch(`${LLAMA_STABLES}/stablecoincharts/all?stablecoin=1`)
-  if (!res.ok) throw new Error(`Stablecoin charts: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`${LLAMA_STABLES}/stablecoincharts/all?stablecoin=1`)
 }
 
 export async function fetchHistoricalChainTvl() {
-  const res = await fetch(`${LLAMA_BASE}/v2/historicalChainTvl`)
-  if (!res.ok) throw new Error(`Historical TVL: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`${LLAMA_BASE}/v2/historicalChainTvl`)
 }
 
 export async function fetchChainTvl(chain) {
   try {
-    const res = await fetch(`${LLAMA_BASE}/v2/historicalChainTvl/${chain}`)
-    if (!res.ok) throw new Error(`Chain TVL: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/v2/historicalChainTvl/${chain}`)
   } catch {
     return null
   }
@@ -59,9 +45,7 @@ export async function fetchChainTvl(chain) {
 
 export async function fetchDexOverview() {
   try {
-    const res = await fetch(`${LLAMA_BASE}/overview/dexs`)
-    if (!res.ok) throw new Error(`DEX overview: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/overview/dexs`)
   } catch {
     return null
   }
@@ -69,9 +53,7 @@ export async function fetchDexOverview() {
 
 export async function fetchDexByChain(chain) {
   try {
-    const res = await fetch(`${LLAMA_BASE}/overview/dexs/${chain}`)
-    if (!res.ok) throw new Error(`DEX by chain: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/overview/dexs/${chain}`)
   } catch {
     return null
   }
@@ -79,9 +61,7 @@ export async function fetchDexByChain(chain) {
 
 export async function fetchDexProtocol(protocol) {
   try {
-    const res = await fetch(`${LLAMA_BASE}/summary/dexs/${protocol}`)
-    if (!res.ok) throw new Error(`DEX protocol: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/summary/dexs/${protocol}`)
   } catch {
     return null
   }
@@ -89,9 +69,7 @@ export async function fetchDexProtocol(protocol) {
 
 export async function fetchOptionsOverview() {
   try {
-    const res = await fetch(`${LLAMA_BASE}/overview/options`)
-    if (!res.ok) throw new Error(`Options overview: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/overview/options`)
   } catch {
     return null
   }
@@ -99,9 +77,7 @@ export async function fetchOptionsOverview() {
 
 export async function fetchDerivativesOverview() {
   try {
-    const res = await fetch(`${LLAMA_BASE}/overview/derivatives`)
-    if (!res.ok) throw new Error(`Derivatives overview: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/overview/derivatives`)
   } catch {
     return null
   }
@@ -109,9 +85,7 @@ export async function fetchDerivativesOverview() {
 
 export async function fetchBridges() {
   try {
-    const res = await fetch(`${LLAMA_BRIDGES}/bridges`)
-    if (!res.ok) throw new Error(`Bridges: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BRIDGES}/bridges`)
   } catch {
     return null
   }
@@ -119,9 +93,7 @@ export async function fetchBridges() {
 
 export async function fetchBridgeVolume(id) {
   try {
-    const res = await fetch(`${LLAMA_BRIDGES}/bridge/${id}`)
-    if (!res.ok) throw new Error(`Bridge volume: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BRIDGES}/bridge/${id}`)
   } catch {
     return null
   }
@@ -129,9 +101,7 @@ export async function fetchBridgeVolume(id) {
 
 export async function fetchRaises() {
   try {
-    const res = await fetch(`${LLAMA_BASE}/raises`)
-    if (!res.ok) throw new Error(`Raises: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/raises`)
   } catch {
     return null
   }
@@ -139,9 +109,7 @@ export async function fetchRaises() {
 
 export async function fetchHacks() {
   try {
-    const res = await fetch(`${LLAMA_BASE}/hacks`)
-    if (!res.ok) throw new Error(`Hacks: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/hacks`)
   } catch {
     return null
   }
@@ -149,9 +117,7 @@ export async function fetchHacks() {
 
 export async function fetchFeesByChain(chain) {
   try {
-    const res = await fetch(`${LLAMA_BASE}/overview/fees/${chain}`)
-    if (!res.ok) throw new Error(`Fees by chain: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/overview/fees/${chain}`)
   } catch {
     return null
   }
@@ -159,9 +125,7 @@ export async function fetchFeesByChain(chain) {
 
 export async function fetchTreasury(protocol) {
   try {
-    const res = await fetch(`${LLAMA_BASE}/treasury/${protocol}`)
-    if (!res.ok) throw new Error(`Treasury: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/treasury/${protocol}`)
   } catch {
     return null
   }
@@ -169,9 +133,7 @@ export async function fetchTreasury(protocol) {
 
 export async function fetchProtocolUsers(protocol) {
   try {
-    const res = await fetch(`${LLAMA_BASE}/userData/users/${protocol}`)
-    if (!res.ok) throw new Error(`Protocol users: ${res.status}`)
-    return res.json()
+    return await deduplicatedFetch(`${LLAMA_BASE}/userData/users/${protocol}`)
   } catch {
     return null
   }
@@ -181,9 +143,7 @@ export async function fetchProtocolUsers(protocol) {
 // Alternative.me — Fear & Greed Index (free, client-side)
 // ============================================================
 export async function fetchFearGreedIndex(limit = 0) {
-  const res = await fetch(`https://api.alternative.me/fng/?limit=${limit}&format=json`)
-  if (!res.ok) throw new Error(`Fear & Greed: ${res.status}`)
-  const data = await res.json()
+  const data = await deduplicatedFetch(`https://api.alternative.me/fng/?limit=${limit}&format=json`)
   return data.data // array of { value, value_classification, timestamp }
 }
 
@@ -191,38 +151,28 @@ export async function fetchFearGreedIndex(limit = 0) {
 // Token Terminal (via serverless proxy)
 // ============================================================
 export async function fetchTokenTerminalProjects() {
-  const res = await fetch('/api/token-terminal?endpoint=projects')
-  if (!res.ok) throw new Error(`Token Terminal projects: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch('/api/token-terminal?endpoint=projects')
 }
 
 export async function fetchTokenTerminalMetrics(projectId, metric = 'revenue', interval = 'daily') {
   const params = new URLSearchParams({ endpoint: 'metrics', project_id: projectId, metric_id: metric, interval })
-  const res = await fetch(`/api/token-terminal?${params}`)
-  if (!res.ok) throw new Error(`Token Terminal metrics: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`/api/token-terminal?${params}`)
 }
 
 export async function fetchTokenTerminalBulkMetrics(metric = 'revenue') {
   const params = new URLSearchParams({ endpoint: 'bulk-metrics', metric_id: metric })
-  const res = await fetch(`/api/token-terminal?${params}`)
-  if (!res.ok) throw new Error(`Token Terminal bulk metrics: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`/api/token-terminal?${params}`)
 }
 
 // ============================================================
 // Yahoo Finance (via serverless proxy)
 // ============================================================
 export async function fetchYahooQuote(symbol) {
-  const res = await fetch(`/api/yahoo?action=quote&symbol=${encodeURIComponent(symbol)}`)
-  if (!res.ok) throw new Error(`Yahoo quote: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`/api/yahoo?action=quote&symbol=${encodeURIComponent(symbol)}`)
 }
 
 export async function fetchYahooHistorical(symbol, period = '2y') {
-  const res = await fetch(`/api/yahoo?action=historical&symbol=${encodeURIComponent(symbol)}&period=${period}`)
-  if (!res.ok) throw new Error(`Yahoo historical: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`/api/yahoo?action=historical&symbol=${encodeURIComponent(symbol)}&period=${period}`)
 }
 
 // ============================================================
@@ -301,9 +251,7 @@ export async function fetchFutureLeadersData() {
 }
 
 export async function fetchYieldPools() {
-  const res = await fetch('https://api.llama.fi/pools')
-  if (!res.ok) throw new Error(`DeFiLlama pools: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch('https://api.llama.fi/pools')
 }
 
 export async function fetchYieldAnalysisData() {
@@ -328,9 +276,7 @@ export async function fetchYieldAnalysisData() {
 // CoinGecko (via serverless proxy)
 // ============================================================
 export async function fetchCoinGeckoDetail(coinId) {
-  const res = await fetch(`/api/coingecko?action=coin_detail&coin_id=${encodeURIComponent(coinId)}`)
-  if (!res.ok) throw new Error(`CoinGecko coin detail: ${res.status}`)
-  return res.json()
+  return deduplicatedFetch(`/api/coingecko?action=coin_detail&coin_id=${encodeURIComponent(coinId)}`)
 }
 
 export async function fetchDeveloperActivityData() {
