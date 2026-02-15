@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/* Critical CSS for immediate render before JS loads */
+#app:empty::after {
+  content: "Revenue Codex";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  opacity: 0.5;
+}
+
 @theme {
   --font-sans: "Inter", system-ui, sans-serif;
   --color-primary: #2563EB;
