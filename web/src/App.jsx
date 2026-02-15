@@ -1,19 +1,22 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import Layout from './components/Layout'
 import TabNav from './components/TabNav'
-import ValuationsTab from './components/tabs/ValuationsTab'
-import SentimentTab from './components/tabs/SentimentTab'
-import RevenueQualityTab from './components/tabs/RevenueQualityTab'
-import MoatsTab from './components/tabs/MoatsTab'
-import FutureLeadersTab from './components/tabs/FutureLeadersTab'
-import CapitalEfficiencyTab from './components/tabs/CapitalEfficiencyTab'
-import MarketStructureTab from './components/tabs/MarketStructureTab'
-import DerivativesTab from './components/tabs/DerivativesTab'
-import YieldAnalysisTab from './components/tabs/YieldAnalysisTab'
-import MacroTab from './components/tabs/MacroTab'
-import OnChainEconomyTab from './components/tabs/OnChainEconomyTab'
-import DeveloperActivityTab from './components/tabs/DeveloperActivityTab'
-import OnChainMetricsTab from './components/tabs/OnChainMetricsTab'
+import LoadingSpinner from './components/LoadingSpinner'
+
+// Lazy load all tabs for code splitting
+const ValuationsTab = lazy(() => import('./components/tabs/ValuationsTab'))
+const SentimentTab = lazy(() => import('./components/tabs/SentimentTab'))
+const RevenueQualityTab = lazy(() => import('./components/tabs/RevenueQualityTab'))
+const MoatsTab = lazy(() => import('./components/tabs/MoatsTab'))
+const FutureLeadersTab = lazy(() => import('./components/tabs/FutureLeadersTab'))
+const CapitalEfficiencyTab = lazy(() => import('./components/tabs/CapitalEfficiencyTab'))
+const MarketStructureTab = lazy(() => import('./components/tabs/MarketStructureTab'))
+const DerivativesTab = lazy(() => import('./components/tabs/DerivativesTab'))
+const YieldAnalysisTab = lazy(() => import('./components/tabs/YieldAnalysisTab'))
+const MacroTab = lazy(() => import('./components/tabs/MacroTab'))
+const OnChainEconomyTab = lazy(() => import('./components/tabs/OnChainEconomyTab'))
+const DeveloperActivityTab = lazy(() => import('./components/tabs/DeveloperActivityTab'))
+const OnChainMetricsTab = lazy(() => import('./components/tabs/OnChainMetricsTab'))
 
 const TABS = [
   // Group 1: Revenue Fundamentals
@@ -59,7 +62,9 @@ export default function App() {
     <Layout>
       <TabNav tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="mt-6">
-        <ActiveComponent />
+        <Suspense fallback={<LoadingSpinner />}>
+          <ActiveComponent />
+        </Suspense>
       </div>
     </Layout>
   )
