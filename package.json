@@ -1,0 +1,8 @@
+{
+  "name": "revenue-codex-api",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "yahoo-finance2": "^2.13.2"
+  }
+}
