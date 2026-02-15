@@ -99,3 +99,13 @@ export const riskPremiumNarrative = {
     'Chain-level analysis shows significant dispersion in risk premiums. Newer chains and L2s command higher premiums, reflecting the market\'s rational pricing of bridge risk, ecosystem maturity, and liquidity depth. This premium compression as chains mature mirrors the corporate bond market\'s treatment of emerging vs established issuers.',
   ],
 }
+
+export const tokenomicsStudyNarrative = {
+  title: 'Tokenomics & Value Accrual Mechanisms',
+  paragraphs: [
+    'Not all protocol revenue is created equal from a token valuation perspective. The critical question is: how much of protocol-generated fees actually accrues to the token? Our analysis reveals a stark bifurcation between value accrual mechanisms.',
+    'Fee-burn mechanisms (ETH-style) create deflationary pressure proportional to usage, directly linking network activity to token scarcity. Staking-reward models distribute fees directly to stakers but face dilution headwinds from token emissions.',
+    'Treasury accrual models (UNI, MKR) route revenue to the DAO, creating optionality but no direct token holder yield until governance votes for distributions. Buyback & burn hybrids attempt to combine direct value accrual with deflationary mechanics.',
+  ],
+  conclusion: 'The market currently prices fee-burn tokens at premium multiples — rational given that fee-burn has no dilution overhead and creates reflexive buying pressure during high-usage periods.',
+}

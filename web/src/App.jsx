@@ -23,6 +23,7 @@ const PowerLawTab = lazy(() => import('./components/tabs/PowerLawTab'))
 const RiskPremiumTab = lazy(() => import('./components/tabs/RiskPremiumTab'))
 const NetworkEffectsTab = lazy(() => import('./components/tabs/NetworkEffectsTab'))
 const MEVStudyTab = lazy(() => import('./components/tabs/MEVStudyTab'))
+const TokenomicsStudyTab = lazy(() => import('./components/tabs/TokenomicsStudyTab'))
 
 const TABS = [
   // Group 1: Revenue Fundamentals
@@ -33,6 +34,7 @@ const TABS = [
   { id: 'moats', label: 'Moats', group: 'Moats & Strategy' },
   { id: 'future', label: 'Future Leaders', group: 'Moats & Strategy' },
   { id: 'efficiency', label: 'Capital Efficiency', group: 'Moats & Strategy' },
+  { id: 'tokenomics', label: 'Tokenomics Study', group: 'Moats & Strategy' },
   // Group 3: Market Intelligence
   { id: 'structure', label: 'Market Structure', group: 'Market Intelligence' },
   { id: 'derivatives', label: 'Derivatives Intelligence', group: 'Market Intelligence' },
@@ -56,6 +58,7 @@ const TAB_COMPONENTS = {
   moats: MoatsTab,
   future: FutureLeadersTab,
   efficiency: CapitalEfficiencyTab,
+  tokenomics: TokenomicsStudyTab,
   structure: MarketStructureTab,
   derivatives: DerivativesTab,
   yield: YieldAnalysisTab,

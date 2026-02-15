@@ -402,3 +402,41 @@ export async function fetchRiskPremiumData() {
     fees: fees.status === 'fulfilled' ? fees.value : null,
   }
 }
+
+// ============================================================
+// CoinGecko Markets (via serverless proxy)
+// ============================================================
+export async function fetchCoinGeckoMarkets() {
+  const res = await fetch('/api/coingecko?action=markets')
+  if (!res.ok) throw new Error(`CoinGecko markets: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchTokenomicsStudyData() {
+  const targetCoins = [
+    'ethereum', 'uniswap', 'aave', 'maker', 'lido-dao',
+    'chainlink', 'curve-dao-token', 'compound-governance-token',
+    'synthetix-network-token', 'gmx', 'pancakeswap-token', 'sushi'
+  ]
+
+  const [protocols, fees, markets, coinDetails] = await Promise.allSettled([
+    fetchAllProtocols(),
+    fetchFeesOverview(),
+    fetchCoinGeckoMarkets(),
+    Promise.allSettled(targetCoins.map(id => fetchCoinGeckoDetail(id))),
+  ])
+
+  const coins = coinDetails.status === 'fulfilled'
+    ? coinDetails.value.map((r, i) => ({
+        id: targetCoins[i],
+        data: r.status === 'fulfilled' ? r.value : null,
+      })).filter(c => c.data)
+    : []
+
+  return {
+    protocols: protocols.status === 'fulfilled' ? protocols.value : null,
+    fees: fees.status === 'fulfilled' ? fees.value : null,
+    markets: markets.status === 'fulfilled' ? markets.value : null,
+    coinDetails: coins,
+  }
+}
