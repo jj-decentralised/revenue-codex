@@ -1,4 +1,7 @@
+import { cachedFetch } from './_cache.js';
+
 const BASE_URL = 'https://open-api-v3.coinglass.com';
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
 export default async function handler(req, res) {
   const apiKey = process.env.COINGLASS_API_KEY;
@@ -87,20 +90,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      headers: {
-        'CG-API-KEY': apiKey,
-        'Accept': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json(data);
-    }
-
-    res.setHeader('Cache-Control', 's-maxage=180');
+    const opts = { headers: { 'CG-API-KEY': apiKey, 'Accept': 'application/json' } };
+    const data = await cachedFetch(`${BASE_URL}${endpoint}`, opts, CACHE_TTL);
+    res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1800');
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ error: 'Failed to fetch from Coinglass API', details: error.message });

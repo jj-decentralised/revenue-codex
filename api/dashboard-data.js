@@ -1,8 +1,11 @@
 /**
  * Pre-aggregated Dashboard Data Endpoint
  *
- * Fetches ALL core datasets in parallel and returns a single cached response.
- * Vercel CDN caches for 5 minutes, serves stale for 10 minutes.
+ * Fetches ALL core datasets and returns a single cached response.
+ * Uses server-side in-memory cache (survives warm Vercel invocations) + retry on 429.
+ * Token Terminal calls are sequential (60 req/min limit).
+ * CoinGecko pages are sequential with 200ms delay.
+ * CDN caches for 15 min, serves stale for 1 hour.
  *
  * Data sources:
  * - DeFiLlama: protocols, fees/revenue, dexs, derivatives, options, stablecoins, bridges, raises, hacks, yield pools, historical TVL
@@ -12,6 +15,8 @@
  * - Alternative.me: Fear & Greed Index (365 days)
  */
 
+import { cachedFetch, sequentialFetchAll, getCacheStats } from './_cache.js';
+
 const DEFILLAMA_BASE = 'https://api.llama.fi';
 const DEFILLAMA_STABLES = 'https://stablecoins.llama.fi';
 const DEFILLAMA_BRIDGES = 'https://bridges.llama.fi';
@@ -20,24 +25,7 @@ const COINGLASS_BASE = 'https://open-api-v3.coinglass.com';
 const ALTERNATIVE_BASE = 'https://api.alternative.me';
 const TT_BASE = 'https://api.tokenterminal.com/v2';
 
-async function fetchWithTimeout(url, options = {}, timeoutMs = 30000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
-  }
-}
-
-async function fetchJSON(url, options = {}) {
-  const response = await fetchWithTimeout(url, options);
-  if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
-  return response.json();
-}
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
 function cgHeaders(apiKey) {
   return { 'x-cg-pro-api-key': apiKey, 'Accept': 'application/json' };
@@ -51,6 +39,16 @@ function glassHeaders(apiKey) {
   return { 'CG-API-KEY': apiKey, 'Accept': 'application/json' };
 }
 
+/** Wrap cachedFetch to return { status, value/reason } like Promise.allSettled */
+async function safeFetch(url, options = {}) {
+  try {
+    const data = await cachedFetch(url, options, CACHE_TTL);
+    return { status: 'fulfilled', value: data };
+  } catch (err) {
+    return { status: 'rejected', reason: err };
+  }
+}
+
 export default async function handler(req, res) {
   const ttApiKey = process.env.TOKEN_TERMINAL_API_KEY;
   const cgApiKey = process.env.COINGECKO_API_KEY;
@@ -59,106 +57,110 @@ export default async function handler(req, res) {
   const timestamp = new Date().toISOString();
   const errors = [];
 
-  // ── Build all fetch operations ──
-  const fetchers = {
-    // DeFiLlama (no auth — always available)
-    protocols: fetchJSON(`${DEFILLAMA_BASE}/protocols`),
-    fees: fetchJSON(`${DEFILLAMA_BASE}/overview/fees?excludeTotalDataChartBreakdown=false`),
-    dexs: fetchJSON(`${DEFILLAMA_BASE}/overview/dexs`),
-    derivatives: fetchJSON(`${DEFILLAMA_BASE}/overview/derivatives`),
-    options: fetchJSON(`${DEFILLAMA_BASE}/overview/options`),
-    historicalTvl: fetchJSON(`${DEFILLAMA_BASE}/v2/historicalChainTvl`),
-    stablecoins: fetchJSON(`${DEFILLAMA_STABLES}/stablecoins?includePrices=true`),
-    stablecoinCharts: fetchJSON(`${DEFILLAMA_STABLES}/stablecoincharts/all?stablecoin=1`),
-    bridges: fetchJSON(`${DEFILLAMA_BRIDGES}/bridges`),
-    raises: fetchJSON(`${DEFILLAMA_BASE}/raises`),
-    hacks: fetchJSON(`${DEFILLAMA_BASE}/hacks`),
-    yieldPools: fetchJSON(`${DEFILLAMA_BASE}/pools`),
-    // Alternative.me (no auth)
-    fearGreed: fetchJSON(`${ALTERNATIVE_BASE}/fng/?limit=365&format=json`),
+  // ── DeFiLlama (free, no rate limits) — parallel ──
+  const llamaUrls = {
+    protocols: `${DEFILLAMA_BASE}/protocols`,
+    fees: `${DEFILLAMA_BASE}/overview/fees?excludeTotalDataChartBreakdown=false`,
+    dexs: `${DEFILLAMA_BASE}/overview/dexs`,
+    derivatives: `${DEFILLAMA_BASE}/overview/derivatives`,
+    options: `${DEFILLAMA_BASE}/overview/options`,
+    historicalTvl: `${DEFILLAMA_BASE}/v2/historicalChainTvl`,
+    stablecoins: `${DEFILLAMA_STABLES}/stablecoins?includePrices=true`,
+    stablecoinCharts: `${DEFILLAMA_STABLES}/stablecoincharts/all?stablecoin=1`,
+    bridges: `${DEFILLAMA_BRIDGES}/bridges`,
+    raises: `${DEFILLAMA_BASE}/raises`,
+    hacks: `${DEFILLAMA_BASE}/hacks`,
+    yieldPools: `${DEFILLAMA_BASE}/pools`,
+    fearGreed: `${ALTERNATIVE_BASE}/fng/?limit=365&format=json`,
   };
 
-  // Token Terminal — bulk financial metrics for ALL projects
-  if (ttApiKey) {
-    const h = { headers: ttHeaders(ttApiKey) };
-    fetchers.ttProjects = fetchJSON(`${TT_BASE}/projects`, h);
-    fetchers.ttRevenue = fetchJSON(`${TT_BASE}/metrics/revenue`, h);
-    fetchers.ttFees = fetchJSON(`${TT_BASE}/metrics/fees`, h);
-    fetchers.ttEarnings = fetchJSON(`${TT_BASE}/metrics/earnings`, h);
-    fetchers.ttTokenIncentives = fetchJSON(`${TT_BASE}/metrics/token_incentives`, h);
-    fetchers.ttPriceToSales = fetchJSON(`${TT_BASE}/metrics/price_to_sales`, h);
-    fetchers.ttPriceToEarnings = fetchJSON(`${TT_BASE}/metrics/price_to_earnings`, h);
-    fetchers.ttActiveUsers = fetchJSON(`${TT_BASE}/metrics/active_users`, h);
-  }
+  const llamaKeys = Object.keys(llamaUrls);
+  const llamaResults = await Promise.allSettled(
+    llamaKeys.map(k => cachedFetch(llamaUrls[k], {}, CACHE_TTL))
+  );
 
-  // CoinGecko Pro — 1000 coins (4 pages × 250) + global + categories
-  if (cgApiKey) {
-    const h = { headers: cgHeaders(cgApiKey) };
-    for (let p = 1; p <= 4; p++) {
-      fetchers[`cgMarkets${p}`] = fetchJSON(
-        `${COINGECKO_BASE}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${p}&sparkline=false&price_change_percentage=1h,24h,7d,30d`, h
-      );
-    }
-    fetchers.cgGlobal = fetchJSON(`${COINGECKO_BASE}/global`, h);
-    fetchers.cgCategories = fetchJSON(`${COINGECKO_BASE}/coins/categories?order=market_cap_desc`, h);
-  }
-
-  // Coinglass
-  if (glassApiKey) {
-    const h = { headers: glassHeaders(glassApiKey) };
-    fetchers.glassFunding = fetchJSON(`${COINGLASS_BASE}/api/futures/fundingRate/v2/home`, h);
-    fetchers.glassLiquidation = fetchJSON(`${COINGLASS_BASE}/api/futures/liquidation/v2/home`, h);
-    fetchers.glassETF = fetchJSON(`${COINGLASS_BASE}/api/index/bitcoin-etf/history`, h);
-    fetchers.glassCoinsMarkets = fetchJSON(`${COINGLASS_BASE}/api/futures/coins/markets`, h);
-  }
-
-  // ── Execute all in parallel ──
-  const entries = Object.entries(fetchers);
-  const results = await Promise.allSettled(entries.map(([, p]) => p));
-
-  const data = {
-    timestamp,
-    _meta: { cached: true, cacheMaxAge: 300, staleWhileRevalidate: 600, sources: entries.length },
-  };
-
-  results.forEach((result, index) => {
-    const [key] = entries[index];
-    if (result.status === 'fulfilled') {
-      data[key] = result.value;
+  const data = { timestamp };
+  llamaKeys.forEach((key, i) => {
+    if (llamaResults[i].status === 'fulfilled') {
+      data[key] = llamaResults[i].value;
     } else {
       data[key] = null;
-      errors.push({ source: key, error: result.reason?.message || 'Unknown error' });
+      errors.push({ source: key, error: llamaResults[i].reason?.message || 'Unknown' });
     }
   });
 
-  // Merge CoinGecko market pages into single array
-  if (cgApiKey) {
-    const allMarkets = [];
-    for (let p = 1; p <= 4; p++) {
-      const k = `cgMarkets${p}`;
-      if (Array.isArray(data[k])) allMarkets.push(...data[k]);
-      delete data[k];
-    }
-    data.coinMarkets = allMarkets;
+  // ── Token Terminal (60 req/min limit) — SEQUENTIAL with 1s delay ──
+  if (ttApiKey) {
+    const ttOpts = { headers: ttHeaders(ttApiKey) };
+    const ttMetrics = ['revenue', 'fees', 'earnings', 'token_incentives', 'price_to_sales', 'price_to_earnings', 'active_users'];
+    const ttUrls = [`${TT_BASE}/projects`, ...ttMetrics.map(m => `${TT_BASE}/metrics/${m}`)];
+    const ttResults = await sequentialFetchAll(ttUrls, ttOpts, 1000, CACHE_TTL);
+
+    data.ttProjects = ttResults[0].status === 'fulfilled' ? ttResults[0].value : null;
+    if (ttResults[0].status === 'rejected') errors.push({ source: 'ttProjects', error: ttResults[0].reason?.message });
+
+    const ttFinancials = {};
+    ttMetrics.forEach((m, i) => {
+      const r = ttResults[i + 1];
+      ttFinancials[m] = r.status === 'fulfilled' ? r.value : null;
+      if (r.status === 'rejected') errors.push({ source: `tt_${m}`, error: r.reason?.message });
+    });
+    data.ttFinancials = ttFinancials;
   }
 
-  // Merge Token Terminal bulk metrics into financials object
-  if (ttApiKey) {
-    data.ttFinancials = {
-      revenue: data.ttRevenue,
-      fees: data.ttFees,
-      earnings: data.ttEarnings,
-      token_incentives: data.ttTokenIncentives,
-      price_to_sales: data.ttPriceToSales,
-      price_to_earnings: data.ttPriceToEarnings,
-      active_users: data.ttActiveUsers,
-    };
-    ['ttRevenue', 'ttFees', 'ttEarnings', 'ttTokenIncentives', 'ttPriceToSales', 'ttPriceToEarnings', 'ttActiveUsers'].forEach(k => delete data[k]);
+  // ── CoinGecko Pro (500 req/min) — SEQUENTIAL pages with 300ms delay ──
+  if (cgApiKey) {
+    const cgOpts = { headers: cgHeaders(cgApiKey) };
+    const cgPageUrls = [1, 2, 3, 4].map(p =>
+      `${COINGECKO_BASE}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${p}&sparkline=false&price_change_percentage=1h,24h,7d,30d`
+    );
+    const cgPageResults = await sequentialFetchAll(cgPageUrls, cgOpts, 300, CACHE_TTL);
+
+    const allMarkets = [];
+    cgPageResults.forEach((r, i) => {
+      if (r.status === 'fulfilled' && Array.isArray(r.value)) allMarkets.push(...r.value);
+      else errors.push({ source: `cgMarkets_p${i + 1}`, error: r.reason?.message || 'empty' });
+    });
+    data.coinMarkets = allMarkets;
+
+    // Global + categories can be parallel (only 2 calls)
+    const [cgGlobal, cgCategories] = await Promise.allSettled([
+      cachedFetch(`${COINGECKO_BASE}/global`, cgOpts, CACHE_TTL),
+      cachedFetch(`${COINGECKO_BASE}/coins/categories?order=market_cap_desc`, cgOpts, CACHE_TTL),
+    ]);
+    data.cgGlobal = cgGlobal.status === 'fulfilled' ? cgGlobal.value : null;
+    data.cgCategories = cgCategories.status === 'fulfilled' ? cgCategories.value : null;
+    if (cgGlobal.status === 'rejected') errors.push({ source: 'cgGlobal', error: cgGlobal.reason?.message });
+    if (cgCategories.status === 'rejected') errors.push({ source: 'cgCategories', error: cgCategories.reason?.message });
+  }
+
+  // ── Coinglass (plan-dependent limit) — parallel (only 4 calls) ──
+  if (glassApiKey) {
+    const glOpts = { headers: glassHeaders(glassApiKey) };
+    const glKeys = ['glassFunding', 'glassLiquidation', 'glassETF', 'glassCoinsMarkets'];
+    const glUrls = [
+      `${COINGLASS_BASE}/api/futures/fundingRate/v2/home`,
+      `${COINGLASS_BASE}/api/futures/liquidation/v2/home`,
+      `${COINGLASS_BASE}/api/index/bitcoin-etf/history`,
+      `${COINGLASS_BASE}/api/futures/coins/markets`,
+    ];
+    const glResults = await Promise.allSettled(glUrls.map(u => cachedFetch(u, glOpts, CACHE_TTL)));
+    glKeys.forEach((key, i) => {
+      data[key] = glResults[i].status === 'fulfilled' ? glResults[i].value : null;
+      if (glResults[i].status === 'rejected') errors.push({ source: key, error: glResults[i].reason?.message });
+    });
   }
 
   if (errors.length > 0) data._errors = errors;
+  data._meta = {
+    cached: true,
+    cacheMaxAge: 900,
+    staleWhileRevalidate: 3600,
+    sources: Object.keys(data).filter(k => !k.startsWith('_')).length,
+    serverCache: getCacheStats(),
+  };
 
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+  res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=3600');
   res.setHeader('Content-Type', 'application/json');
   return res.status(200).json(data);
 }

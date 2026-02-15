@@ -1,18 +1,12 @@
+import { cachedFetch, sequentialFetchAll } from './_cache.js';
+
 const TT_BASE = 'https://api.tokenterminal.com/v2'
+const CACHE_TTL = 15 * 60 * 1000 // 15 minutes
 
 const HEADERS = (apiKey) => ({
   'Authorization': `Bearer ${apiKey}`,
   'Accept': 'application/json',
 })
-
-async function ttFetch(url, apiKey) {
-  const response = await fetch(url, { headers: HEADERS(apiKey) })
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`TT ${response.status}: ${text.slice(0, 200)}`)
-  }
-  return response.json()
-}
 
 export default async function handler(req, res) {
   const apiKey = process.env.TOKEN_TERMINAL_API_KEY
@@ -20,20 +14,21 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'TOKEN_TERMINAL_API_KEY not configured' })
   }
 
+  const opts = { headers: HEADERS(apiKey) }
   const { endpoint, project_id, metric_id, interval, market_sector_id, start, end, granularity } = req.query
 
-  // Special endpoint: pull ALL key financial metrics in one call
+  // Special endpoint: pull ALL key financial metrics SEQUENTIALLY (60 req/min limit)
   if (endpoint === 'all-financials') {
     try {
       const metrics = ['revenue', 'fees', 'earnings', 'token_incentives', 'price_to_sales', 'price_to_earnings', 'active_users']
-      const results = await Promise.allSettled(
-        metrics.map(m => ttFetch(`${TT_BASE}/metrics/${m}`, apiKey))
-      )
+      const urls = metrics.map(m => `${TT_BASE}/metrics/${m}`)
+      // Sequential with 1s delay between each to respect 60 req/min
+      const results = await sequentialFetchAll(urls, opts, 1000, CACHE_TTL)
       const financials = {}
       metrics.forEach((m, i) => {
         financials[m] = results[i].status === 'fulfilled' ? results[i].value : null
       })
-      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+      res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=3600')
       return res.status(200).json(financials)
     } catch (err) {
       return res.status(500).json({ error: err.message })
@@ -86,8 +81,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const data = await ttFetch(url, apiKey)
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+    const data = await cachedFetch(url, opts, CACHE_TTL)
+    res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=3600')
     return res.status(200).json(data)
   } catch (err) {
     return res.status(500).json({ error: err.message })

@@ -1,5 +1,5 @@
 const MEMORY_CACHE = new Map()
-const DEFAULT_TTL = 5 * 60 * 1000 // 5 minutes
+const DEFAULT_TTL = 15 * 60 * 1000 // 15 minutes
 
 export function cachedFetch(url, options = {}, ttl = DEFAULT_TTL) {
   const cacheKey = url + JSON.stringify(options.body || "")

@@ -1,16 +1,12 @@
+import { cachedFetch, sequentialFetchAll } from './_cache.js';
+
 const BASE_URL = 'https://pro-api.coingecko.com/api/v3';
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
 const HEADERS = (apiKey) => ({
   'x-cg-pro-api-key': apiKey,
   'Accept': 'application/json',
 });
-
-async function fetchPage(apiKey, page, perPage = 250) {
-  const url = `${BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=false&price_change_percentage=1h,24h,7d,30d`;
-  const response = await fetch(url, { headers: HEADERS(apiKey) });
-  if (!response.ok) throw new Error(`CoinGecko page ${page}: ${response.status}`);
-  return response.json();
-}
 
 export default async function handler(req, res) {
   const apiKey = process.env.COINGECKO_API_KEY;
@@ -19,20 +15,23 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'COINGECKO_API_KEY not configured' });
   }
 
+  const opts = { headers: HEADERS(apiKey) };
   const { action, coin_id, days, exchange_id, page, per_page } = req.query;
 
-  // Special action: fetch 1000 coins (4 pages × 250) in parallel
+  // Special action: fetch 1000 coins (4 pages × 250) SEQUENTIALLY with 300ms delay
   if (action === 'markets_all') {
     try {
-      const pages = [1, 2, 3, 4];
-      const results = await Promise.allSettled(pages.map(p => fetchPage(apiKey, p, 250)));
+      const urls = [1, 2, 3, 4].map(p =>
+        `${BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${p}&sparkline=false&price_change_percentage=1h,24h,7d,30d`
+      );
+      const results = await sequentialFetchAll(urls, opts, 300, CACHE_TTL);
       const allCoins = [];
       for (const result of results) {
         if (result.status === 'fulfilled' && Array.isArray(result.value)) {
           allCoins.push(...result.value);
         }
       }
-      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+      res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=3600');
       return res.status(200).json(allCoins);
     } catch (error) {
       return res.status(500).json({ error: 'Failed to fetch all markets', details: error.message });
@@ -111,17 +110,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      headers: HEADERS(apiKey),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json(data);
-    }
-
-    res.setHeader('Cache-Control', 's-maxage=300');
+    const data = await cachedFetch(`${BASE_URL}${endpoint}`, opts, CACHE_TTL);
+    res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=3600');
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ error: 'Failed to fetch from CoinGecko API', details: error.message });
