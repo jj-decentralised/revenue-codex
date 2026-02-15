@@ -28,6 +28,12 @@
   --color-warning: #F59E0B;
 }
 
+/* Tailwind v4 removed the global default border-color that v3 had.
+   Restore it so `border` utilities use our theme gray, not currentColor. */
+*, ::before, ::after, ::backdrop {
+  border-color: var(--color-border, #E5E7EB);
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg);
