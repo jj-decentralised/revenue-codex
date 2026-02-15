@@ -2,6 +2,8 @@ import { useState, lazy, Suspense } from 'react'
 import Layout from './components/Layout'
 import TabNav from './components/TabNav'
 import LoadingSpinner from './components/LoadingSpinner'
+import { DashboardSkeleton } from './components/ChartSkeleton'
+import { useData } from './context/DataProvider'
 
 // Lazy load all tabs for code splitting
 const ValuationsTab = lazy(() => import('./components/tabs/ValuationsTab'))
@@ -69,13 +71,35 @@ const TAB_COMPONENTS = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('valuations')
+  const { loading, error } = useData()
   const ActiveComponent = TAB_COMPONENTS[activeTab]
+
+  // Full-page loading state while core data loads
+  if (loading) {
+    return <LoadingSpinner message="Fetching market data..." fullScreen />
+  }
+
+  // Error state with retry option
+  if (error) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-(--color-background)">
+        <h2 className="text-xl font-semibold text-(--color-text) mb-2">Revenue Codex</h2>
+        <p className="text-(--color-danger) mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-(--color-primary) text-white rounded-lg hover:opacity-90 transition-opacity"
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
 
   return (
     <Layout>
       <TabNav tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="mt-6">
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<DashboardSkeleton />}>
           <ActiveComponent />
         </Suspense>
       </div>
