@@ -19,6 +19,7 @@ const DeveloperActivityTab = lazy(() => import('./components/tabs/DeveloperActiv
 const OnChainMetricsTab = lazy(() => import('./components/tabs/OnChainMetricsTab'))
 const PowerLawTab = lazy(() => import('./components/tabs/PowerLawTab'))
 const RiskPremiumTab = lazy(() => import('./components/tabs/RiskPremiumTab'))
+const NetworkEffectsTab = lazy(() => import('./components/tabs/NetworkEffectsTab'))
 
 const TABS = [
   // Group 1: Revenue Fundamentals
@@ -41,6 +42,7 @@ const TABS = [
   { id: 'onchainmetrics', label: 'On-Chain Metrics', group: 'Macro & On-Chain' },
   // Group 5: Academic Studies
   { id: 'powerlaw', label: 'Power Laws', group: 'Academic Studies' },
+  { id: 'networkeffects', label: 'Network Effects', group: 'Academic Studies' },
 ]
 
 const TAB_COMPONENTS = {
@@ -59,6 +61,7 @@ const TAB_COMPONENTS = {
   developer: DeveloperActivityTab,
   onchainmetrics: OnChainMetricsTab,
   powerlaw: PowerLawTab,
+  networkeffects: NetworkEffectsTab,
 }
 
 export default function App() {
