@@ -192,3 +192,36 @@ export async function fetchYieldAnalysisData() {
     treasuryYield,
   }
 }
+
+// ============================================================
+// CoinGecko (via serverless proxy)
+// ============================================================
+export async function fetchCoinGeckoDetail(coinId) {
+  const res = await fetch(`/api/coingecko?action=coin_detail&coin_id=${encodeURIComponent(coinId)}`)
+  if (!res.ok) throw new Error(`CoinGecko coin detail: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchDeveloperActivityData() {
+  const targetCoins = [
+    'ethereum', 'bitcoin', 'solana', 'uniswap', 'aave',
+    'chainlink', 'maker', 'arbitrum', 'polygon-ecosystem-token', 'lido-dao'
+  ]
+
+  const [coinDetails, fees] = await Promise.allSettled([
+    Promise.allSettled(targetCoins.map(id => fetchCoinGeckoDetail(id))),
+    fetchFeesOverview(),
+  ])
+
+  const coins = coinDetails.status === 'fulfilled'
+    ? coinDetails.value.map((r, i) => ({
+        id: targetCoins[i],
+        data: r.status === 'fulfilled' ? r.value : null,
+      })).filter(c => c.data)
+    : []
+
+  return {
+    coins,
+    fees: fees.status === 'fulfilled' ? fees.value : null,
+  }
+}

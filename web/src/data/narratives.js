@@ -80,3 +80,12 @@ export const yieldAnalysisNarrative = {
     'Higher yields almost always come with higher risk. The yield-TVL scatter shows this clearly: large, battle-tested pools offer modest yields, while smaller pools must offer premium APY to attract capital. This is rational market behavior — LPs demand compensation for illiquidity and smart contract risk.',
   ],
 }
+
+export const developerActivityNarrative = {
+  title: 'Developer Activity: The Leading Indicator',
+  paragraphs: [
+    'Developer activity is the leading indicator of protocol health. Projects with high commit counts are shipping features that drive future revenue. The developer efficiency metric — revenue per commit — reveals which teams create the most economic value per unit of engineering effort.',
+    'Ethereum ecosystem dominates in absolute dev count, but Solana projects show higher commit velocity per developer, suggesting faster iteration cycles. Bitcoin development remains conservative by design, prioritizing stability over rapid feature deployment.',
+    'Community metrics (Twitter followers, Reddit subscribers) represent social capital that translates into user acquisition potential. Projects with strong developer activity AND community engagement exhibit the most durable competitive moats.',
+  ],
+}
