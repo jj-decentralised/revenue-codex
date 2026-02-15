@@ -38,8 +38,52 @@ export default async function handler(req, res) {
       }
       endpoint = `/api/futures/openInterest/exchange-list?symbol=${encodeURIComponent(symbol)}`;
       break;
+    case 'options_oi':
+      if (!symbol || !range) {
+        return res.status(400).json({ error: 'symbol and range are required for options_oi action' });
+      }
+      endpoint = `/api/option/openInterest/history?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`;
+      break;
+    case 'options_volume':
+      if (!symbol || !range) {
+        return res.status(400).json({ error: 'symbol and range are required for options_volume action' });
+      }
+      endpoint = `/api/option/volume/history?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`;
+      break;
+    case 'exchange_balance':
+      if (!symbol || !range) {
+        return res.status(400).json({ error: 'symbol and range are required for exchange_balance action' });
+      }
+      endpoint = `/api/indicator/exchange/balance?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`;
+      break;
+    case 'exchange_netflow':
+      if (!symbol || !range) {
+        return res.status(400).json({ error: 'symbol and range are required for exchange_netflow action' });
+      }
+      endpoint = `/api/indicator/exchange/netflow?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`;
+      break;
+    case 'basis':
+      if (!symbol || !range) {
+        return res.status(400).json({ error: 'symbol and range are required for basis action' });
+      }
+      endpoint = `/api/futures/basis/history?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`;
+      break;
+    case 'oi_weight':
+      if (!symbol || !range) {
+        return res.status(400).json({ error: 'symbol and range are required for oi_weight action' });
+      }
+      endpoint = `/api/futures/openInterest/ohlc-history?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`;
+      break;
+    case 'grayscale':
+      endpoint = '/api/index/grayscale/history';
+      break;
+    case 'coins_markets':
+      endpoint = '/api/futures/coins/markets';
+      break;
     default:
-      return res.status(400).json({ error: 'Invalid action. Supported: funding, oi, liquidation, longshort, etf, oi_exchange' });
+      return res.status(400).json({ 
+        error: 'Invalid action. Supported: funding, oi, liquidation, longshort, etf, oi_exchange, options_oi, options_volume, exchange_balance, exchange_netflow, basis, oi_weight, grayscale, coins_markets' 
+      });
   }
 
   try {

@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'COINGECKO_API_KEY not configured' });
   }
 
-  const { action, coin_id, days } = req.query;
+  const { action, coin_id, days, exchange_id } = req.query;
 
   let endpoint;
   switch (action) {
@@ -35,8 +35,46 @@ export default async function handler(req, res) {
       }
       endpoint = `/coins/${encodeURIComponent(coin_id)}?localization=false&tickers=false&community_data=true&developer_data=true`;
       break;
+    case 'categories':
+      endpoint = '/coins/categories?order=market_cap_desc';
+      break;
+    case 'trending':
+      endpoint = '/search/trending';
+      break;
+    case 'coin_tickers':
+      if (!coin_id) {
+        return res.status(400).json({ error: 'coin_id is required for coin_tickers action' });
+      }
+      endpoint = `/coins/${encodeURIComponent(coin_id)}/tickers?include_exchange_logo=true&depth=true`;
+      break;
+    case 'derivatives_exchanges':
+      endpoint = '/derivatives/exchanges?order=open_interest_btc_desc&per_page=20';
+      break;
+    case 'public_treasury_btc':
+      endpoint = '/companies/public_treasury/bitcoin';
+      break;
+    case 'public_treasury_eth':
+      endpoint = '/companies/public_treasury/ethereum';
+      break;
+    case 'coin_ohlc':
+      if (!coin_id || !days) {
+        return res.status(400).json({ error: 'coin_id and days are required for coin_ohlc action' });
+      }
+      endpoint = `/coins/${encodeURIComponent(coin_id)}/ohlc?vs_currency=usd&days=${encodeURIComponent(days)}`;
+      break;
+    case 'nfts':
+      endpoint = '/nfts/list?per_page=50';
+      break;
+    case 'exchange_volume':
+      if (!exchange_id) {
+        return res.status(400).json({ error: 'exchange_id is required for exchange_volume action' });
+      }
+      endpoint = `/exchanges/${encodeURIComponent(exchange_id)}/volume_chart?days=30`;
+      break;
     default:
-      return res.status(400).json({ error: 'Invalid action. Supported: markets, global, defi, exchanges, coin_chart, coin_detail' });
+      return res.status(400).json({ 
+        error: 'Invalid action. Supported: markets, global, defi, exchanges, coin_chart, coin_detail, categories, trending, coin_tickers, derivatives_exchanges, public_treasury_btc, public_treasury_eth, coin_ohlc, nfts, exchange_volume' 
+      });
   }
 
   try {

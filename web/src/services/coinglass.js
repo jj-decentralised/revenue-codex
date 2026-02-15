@@ -43,3 +43,35 @@ export async function fetchEtfFlows() {
 export async function fetchOIByExchange(symbol) {
   return fetchApi('oi_exchange', { symbol });
 }
+
+export async function fetchOptionsOI(symbol, range) {
+  return fetchApi('options_oi', { symbol, range });
+}
+
+export async function fetchOptionsVolume(symbol, range) {
+  return fetchApi('options_volume', { symbol, range });
+}
+
+export async function fetchExchangeBalance(symbol, range) {
+  return fetchApi('exchange_balance', { symbol, range });
+}
+
+export async function fetchExchangeNetflow(symbol, range) {
+  return fetchApi('exchange_netflow', { symbol, range });
+}
+
+export async function fetchBasis(symbol, range) {
+  return fetchApi('basis', { symbol, range });
+}
+
+export async function fetchOIWeight(symbol, range) {
+  return fetchApi('oi_weight', { symbol, range });
+}
+
+export async function fetchGrayscale() {
+  return fetchApi('grayscale');
+}
+
+export async function fetchCoinsMarkets() {
+  return fetchApi('coins_markets');
+}
