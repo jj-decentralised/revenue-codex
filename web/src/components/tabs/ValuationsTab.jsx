@@ -4,6 +4,7 @@ import ChartCard from '../ChartCard'
 import KPICard from '../KPICard'
 import NarrativeBox from '../NarrativeBox'
 import LoadingSpinner from '../LoadingSpinner'
+import RevenueBreakdownChart from '../RevenueBreakdownChart'
 import { fetchValuationsData } from '../../services/api'
 import { formatCurrency, formatMultiple, formatPercent, categorizeSector } from '../../utils/helpers'
 import { valuationsNarrative } from '../../data/narratives'
@@ -195,6 +196,9 @@ export default function ValuationsTab() {
 
   return (
     <div className="space-y-6">
+      {/* Hero: Revenue Breakdown */}
+      <RevenueBreakdownChart feesData={data?.fees} />
+
       {/* Data coverage badge */}
       <div className="text-xs text-(--color-text-secondary) text-right">
         {llamaProtocolCount.toLocaleString()} DeFiLlama protocols · {ttProjectCount} Token Terminal projects · {cgMarketCount.toLocaleString()} CoinGecko coins
@@ -307,20 +311,6 @@ export default function ValuationsTab() {
         </ChartCard>
       )}
 
-      <ChartCard title="Revenue by Sector" subtitle={`${sortedSectors.length} sectors — categorical breakdown of 24h fees`}>
-        <Plot
-          data={[{
-            x: sortedSectors.map(s => s[0]),
-            y: sortedSectors.map(s => s[1]),
-            type: 'bar',
-            marker: { color: sortedSectors.map((_, i) => colors.palette[i % colors.palette.length]) },
-            hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>',
-          }]}
-          layout={{ ...defaultLayout, height: 380, yaxis: { ...defaultLayout.yaxis, title: 'Revenue (USD, 24h)' } }}
-          config={defaultConfig}
-          className="w-full"
-        />
-      </ChartCard>
 
       <NarrativeBox title={valuationsNarrative.title}>
         {valuationsNarrative.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
