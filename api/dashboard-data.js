@@ -2,81 +2,93 @@
  * Pre-aggregated Dashboard Data Endpoint
  *
  * Fetches ALL core datasets and returns a single cached response.
- * Uses server-side in-memory cache (survives warm Vercel invocations) + retry on 429.
- * Token Terminal calls are sequential (60 req/min limit).
- * CoinGecko pages are sequential with 200ms delay.
- * CDN caches for 15 min, serves stale for 1 hour.
+ * PRIMARY source: DeFiLlama Pro (1000 req/min) — all free + Pro-only 🔒 endpoints
+ * SECONDARY: CoinGecko Pro (market caps), Coinglass (derivatives), Alternative.me (sentiment)
+ * Token Terminal removed — DeFiLlama Pro covers everything and more.
  *
- * Data sources:
- * - DeFiLlama: protocols, fees/revenue, dexs, derivatives, options, stablecoins, bridges, raises, hacks, yield pools, historical TVL
- * - Token Terminal: bulk revenue, fees, earnings, P/S, P/E, token incentives, active users for ALL projects
- * - CoinGecko Pro: 1000 coins (4 pages × 250), global data, categories
+ * Data sources (40+ datasets):
+ * - DeFiLlama Pro: protocols, fees (3 types), revenue, holdersRevenue, dexs, derivatives,
+ *   options, yields, borrowRates, perps, LSD rates, emissions, categories, forks, oracles,
+ *   entities, treasuries, hacks, raises, chainAssets, ETFs (BTC+ETH), bridges,
+ *   stablecoins, DAT institutions, FDV performance, historicalTvl
+ * - CoinGecko Pro: 1000 coins market data, global stats, categories
  * - Coinglass: funding rates, liquidations, ETF flows, coins markets
  * - Alternative.me: Fear & Greed Index (365 days)
  */
 
 import { cachedFetch, sequentialFetchAll, getCacheStats } from './_cache.js';
 
-const DEFILLAMA_BASE = 'https://api.llama.fi';
-const DEFILLAMA_STABLES = 'https://stablecoins.llama.fi';
-const DEFILLAMA_BRIDGES = 'https://bridges.llama.fi';
+const PRO_LLAMA = 'https://pro-api.llama.fi';
 const COINGECKO_BASE = 'https://pro-api.coingecko.com/api/v3';
 const COINGLASS_BASE = 'https://open-api-v3.coinglass.com';
 const ALTERNATIVE_BASE = 'https://api.alternative.me';
-const TT_BASE = 'https://api.tokenterminal.com/v2';
 
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
-function cgHeaders(apiKey) {
-  return { 'x-cg-pro-api-key': apiKey, 'Accept': 'application/json' };
+function llamaUrl(apiKey, path) {
+  return apiKey ? `${PRO_LLAMA}/${apiKey}${path}` : `${PRO_LLAMA}${path}`;
 }
 
-function ttHeaders(apiKey) {
-  return { 'Authorization': `Bearer ${apiKey}`, 'Accept': 'application/json' };
+function cgHeaders(apiKey) {
+  return { 'x-cg-pro-api-key': apiKey, 'Accept': 'application/json' };
 }
 
 function glassHeaders(apiKey) {
   return { 'CG-API-KEY': apiKey, 'Accept': 'application/json' };
 }
 
-/** Wrap cachedFetch to return { status, value/reason } like Promise.allSettled */
-async function safeFetch(url, options = {}) {
-  try {
-    const data = await cachedFetch(url, options, CACHE_TTL);
-    return { status: 'fulfilled', value: data };
-  } catch (err) {
-    return { status: 'rejected', reason: err };
-  }
+/** Fetch DeFiLlama endpoint, collect errors */
+function llamaFetch(apiKey, path) {
+  return cachedFetch(llamaUrl(apiKey, path), {}, CACHE_TTL);
 }
 
 export default async function handler(req, res) {
-  const ttApiKey = process.env.TOKEN_TERMINAL_API_KEY;
+  const llamaKey = process.env.DEFILLAMA_API_KEY;
   const cgApiKey = process.env.COINGECKO_API_KEY;
   const glassApiKey = process.env.COINGLASS_API_KEY;
 
   const timestamp = new Date().toISOString();
   const errors = [];
 
-  // ── DeFiLlama (free, no rate limits) — parallel ──
-  const llamaUrls = {
-    protocols: `${DEFILLAMA_BASE}/protocols`,
-    fees: `${DEFILLAMA_BASE}/overview/fees?excludeTotalDataChartBreakdown=false`,
-    dexs: `${DEFILLAMA_BASE}/overview/dexs`,
-    derivatives: `${DEFILLAMA_BASE}/overview/derivatives`,
-    options: `${DEFILLAMA_BASE}/overview/options`,
-    historicalTvl: `${DEFILLAMA_BASE}/v2/historicalChainTvl`,
-    stablecoins: `${DEFILLAMA_STABLES}/stablecoins?includePrices=true`,
-    stablecoinCharts: `${DEFILLAMA_STABLES}/stablecoincharts/all?stablecoin=1`,
-    bridges: `${DEFILLAMA_BRIDGES}/bridges`,
-    raises: `${DEFILLAMA_BASE}/raises`,
-    hacks: `${DEFILLAMA_BASE}/hacks`,
-    yieldPools: `${DEFILLAMA_BASE}/pools`,
-    fearGreed: `${ALTERNATIVE_BASE}/fng/?limit=365&format=json`,
+  // ── DeFiLlama Pro (1000 req/min) — ALL parallel ──
+  const llamaEndpoints = {
+    // Core data (free + pro)
+    protocols: '/api/protocols',
+    fees: '/api/overview/fees?excludeTotalDataChartBreakdown=false',
+    feesRevenue: '/api/overview/fees?dataType=dailyRevenue&excludeTotalDataChartBreakdown=false',
+    feesHolders: '/api/overview/fees?dataType=dailyHoldersRevenue&excludeTotalDataChartBreakdown=false',
+    dexs: '/api/overview/dexs',
+    options: '/api/overview/options',
+    historicalTvl: '/api/v2/historicalChainTvl',
+    chains: '/api/v2/chains',
+    stablecoins: '/stablecoins/stablecoins?includePrices=true',
+    stablecoinCharts: '/stablecoins/stablecoincharts/all',
+    // Pro-only 🔒
+    derivatives: '/api/overview/derivatives',
+    yields: '/yields/pools',
+    yieldsBorrow: '/yields/poolsBorrow',
+    yieldsPerps: '/yields/perps',
+    yieldsLsd: '/yields/lsdRates',
+    emissions: '/api/emissions',
+    categories: '/api/categories',
+    forks: '/api/forks',
+    oracles: '/api/oracles',
+    entities: '/api/entities',
+    treasuries: '/api/treasuries',
+    hacks: '/api/hacks',
+    raises: '/api/raises',
+    chainAssets: '/api/chainAssets',
+    etfsBtc: '/etfs/overview',
+    etfsEth: '/etfs/overviewEth',
+    etfsHistory: '/etfs/history',
+    bridges: '/bridges/bridges',
+    datInstitutions: '/dat/institutions',
+    fdvPerformance: '/fdv/performance/7d',
   };
 
-  const llamaKeys = Object.keys(llamaUrls);
+  const llamaKeys = Object.keys(llamaEndpoints);
   const llamaResults = await Promise.allSettled(
-    llamaKeys.map(k => cachedFetch(llamaUrls[k], {}, CACHE_TTL))
+    llamaKeys.map(k => llamaFetch(llamaKey, llamaEndpoints[k]))
   );
 
   const data = { timestamp };
@@ -89,23 +101,12 @@ export default async function handler(req, res) {
     }
   });
 
-  // ── Token Terminal (60 req/min limit) — SEQUENTIAL with 1s delay ──
-  if (ttApiKey) {
-    const ttOpts = { headers: ttHeaders(ttApiKey) };
-    const ttMetrics = ['revenue', 'fees', 'earnings', 'token_incentives', 'price_to_sales', 'price_to_earnings', 'active_users'];
-    const ttUrls = [`${TT_BASE}/projects`, ...ttMetrics.map(m => `${TT_BASE}/metrics/${m}`)];
-    const ttResults = await sequentialFetchAll(ttUrls, ttOpts, 1000, CACHE_TTL);
-
-    data.ttProjects = ttResults[0].status === 'fulfilled' ? ttResults[0].value : null;
-    if (ttResults[0].status === 'rejected') errors.push({ source: 'ttProjects', error: ttResults[0].reason?.message });
-
-    const ttFinancials = {};
-    ttMetrics.forEach((m, i) => {
-      const r = ttResults[i + 1];
-      ttFinancials[m] = r.status === 'fulfilled' ? r.value : null;
-      if (r.status === 'rejected') errors.push({ source: `tt_${m}`, error: r.reason?.message });
-    });
-    data.ttFinancials = ttFinancials;
+  // ── Alternative.me (free) ──
+  try {
+    data.fearGreed = await cachedFetch(`${ALTERNATIVE_BASE}/fng/?limit=365&format=json`, {}, CACHE_TTL);
+  } catch (e) {
+    data.fearGreed = null;
+    errors.push({ source: 'fearGreed', error: e.message });
   }
 
   // ── CoinGecko Pro (500 req/min) — SEQUENTIAL pages with 300ms delay ──
@@ -123,7 +124,6 @@ export default async function handler(req, res) {
     });
     data.coinMarkets = allMarkets;
 
-    // Global + categories can be parallel (only 2 calls)
     const [cgGlobal, cgCategories] = await Promise.allSettled([
       cachedFetch(`${COINGECKO_BASE}/global`, cgOpts, CACHE_TTL),
       cachedFetch(`${COINGECKO_BASE}/coins/categories?order=market_cap_desc`, cgOpts, CACHE_TTL),
@@ -158,6 +158,7 @@ export default async function handler(req, res) {
     staleWhileRevalidate: 3600,
     sources: Object.keys(data).filter(k => !k.startsWith('_')).length,
     serverCache: getCacheStats(),
+    proEndpoints: llamaKeys.length,
   };
 
   res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=3600');

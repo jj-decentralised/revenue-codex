@@ -148,48 +148,34 @@ export async function fetchFearGreedIndex(limit = 0) {
 }
 
 // ============================================================
-// Token Terminal (via serverless proxy) — Revenue & Income data
+// DeFiLlama Pro (via serverless proxy) — Primary data source
 // ============================================================
-export async function fetchTokenTerminalProjects() {
-  return deduplicatedFetch('/api/token-terminal?endpoint=projects')
+function llamaFetch(action, params = {}) {
+  const qs = new URLSearchParams({ action, ...params })
+  return deduplicatedFetch(`/api/defillama?${qs}`)
 }
 
-export async function fetchTokenTerminalMetrics(projectId, metrics = 'revenue,fees,earnings', interval = 'daily') {
-  const params = new URLSearchParams({ endpoint: 'metrics', project_id: projectId, metric_id: metrics, interval })
-  return deduplicatedFetch(`/api/token-terminal?${params}`)
-}
-
-export async function fetchTokenTerminalBulkMetrics(metric = 'revenue') {
-  const params = new URLSearchParams({ endpoint: 'bulk-metrics', metric_id: metric })
-  return deduplicatedFetch(`/api/token-terminal?${params}`)
-}
-
-export async function fetchTokenTerminalMarketSectors() {
-  return deduplicatedFetch('/api/token-terminal?endpoint=market-sectors')
-}
-
-export async function fetchTokenTerminalAggregations(metric = 'revenue', projectId) {
-  const params = new URLSearchParams({ endpoint: 'aggregations', metric_id: metric })
-  if (projectId) params.set('project_id', projectId)
-  return deduplicatedFetch(`/api/token-terminal?${params}`)
-}
-
-// Pull ALL key financial metrics for ALL projects in one call
-// Returns { revenue, fees, earnings, token_incentives, price_to_sales, price_to_earnings, active_users }
-export async function fetchTokenTerminalAllFinancials() {
-  return deduplicatedFetch('/api/token-terminal?endpoint=all-financials')
-}
-
-// Pull historical revenue+fees+earnings for a specific project
-export async function fetchTokenTerminalIncomeStatement(projectId) {
-  const params = new URLSearchParams({
-    endpoint: 'metrics',
-    project_id: projectId,
-    metric_id: 'revenue,fees,earnings,token_incentives,cost_of_revenue',
-    interval: 'daily',
-  })
-  return deduplicatedFetch(`/api/token-terminal?${params}`)
-}
+// Pro-only 🔒 endpoints
+export function fetchLlamaYields() { return llamaFetch('yields') }
+export function fetchLlamaYieldsBorrow() { return llamaFetch('yields_borrow') }
+export function fetchLlamaYieldsPerps() { return llamaFetch('yields_perps') }
+export function fetchLlamaYieldsLsd() { return llamaFetch('yields_lsd') }
+export function fetchLlamaEmissions() { return llamaFetch('emissions') }
+export function fetchLlamaEmission(protocol) { return llamaFetch('emission', { protocol }) }
+export function fetchLlamaCategories() { return llamaFetch('categories') }
+export function fetchLlamaForks() { return llamaFetch('forks') }
+export function fetchLlamaOracles() { return llamaFetch('oracles') }
+export function fetchLlamaEntities() { return llamaFetch('entities') }
+export function fetchLlamaTreasuries() { return llamaFetch('treasuries') }
+export function fetchLlamaChainAssets() { return llamaFetch('chain_assets') }
+export function fetchLlamaEtfsBtc() { return llamaFetch('etfs_btc') }
+export function fetchLlamaEtfsEth() { return llamaFetch('etfs_eth') }
+export function fetchLlamaEtfsHistory() { return llamaFetch('etfs_history') }
+export function fetchLlamaDatInstitutions() { return llamaFetch('dat_institutions') }
+export function fetchLlamaFdvPerformance(period = '7d') { return llamaFetch('fdv_performance', { period }) }
+export function fetchLlamaFeesRevenue() { return llamaFetch('fees_revenue') }
+export function fetchLlamaFeesHolders() { return llamaFetch('fees_holders') }
+export function fetchLlamaFeesProtocol(protocol) { return llamaFetch('fees_protocol', { protocol }) }
 
 // ============================================================
 // Yahoo Finance (via serverless proxy)
@@ -206,20 +192,22 @@ export async function fetchYahooHistorical(symbol, period = '2y') {
 // Aggregated fetchers for tabs
 // ============================================================
 export async function fetchValuationsData() {
-  const [fees, protocols, fng, markets, ttFinancials] = await Promise.allSettled([
+  const [fees, feesRevenue, protocols, fng, markets, emissions] = await Promise.allSettled([
     fetchFeesOverview(),
+    fetchLlamaFeesRevenue(),
     fetchAllProtocols(),
     fetchFearGreedIndex(365),
     fetchCoinGeckoMarketsAll(),
-    fetchTokenTerminalAllFinancials(),
+    fetchLlamaEmissions(),
   ])
 
   return {
     fees: fees.status === 'fulfilled' ? fees.value : null,
+    feesRevenue: feesRevenue.status === 'fulfilled' ? feesRevenue.value : null,
     protocols: protocols.status === 'fulfilled' ? protocols.value : null,
     fearGreed: fng.status === 'fulfilled' ? fng.value : null,
     markets: markets.status === 'fulfilled' ? markets.value : null,
-    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
+    emissions: emissions.status === 'fulfilled' ? emissions.value : null,
   }
 }
 
@@ -236,28 +224,30 @@ export async function fetchSentimentData() {
 }
 
 export async function fetchRevenueQualityData() {
-  const [fees, stablecoins, stablecoinCharts, ttFinancials] = await Promise.allSettled([
+  const [fees, feesRevenue, feesHolders, stablecoins, stablecoinCharts] = await Promise.allSettled([
     fetchFeesOverview(),
+    fetchLlamaFeesRevenue(),
+    fetchLlamaFeesHolders(),
     fetchStablecoins(),
     fetchStablecoinCharts(),
-    fetchTokenTerminalAllFinancials(),
   ])
 
   return {
     fees: fees.status === 'fulfilled' ? fees.value : null,
+    feesRevenue: feesRevenue.status === 'fulfilled' ? feesRevenue.value : null,
+    feesHolders: feesHolders.status === 'fulfilled' ? feesHolders.value : null,
     stablecoins: stablecoins.status === 'fulfilled' ? stablecoins.value : null,
     stablecoinCharts: stablecoinCharts.status === 'fulfilled' ? stablecoinCharts.value : null,
-    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
   }
 }
 
 export async function fetchMoatsData() {
-  const [allProtocols, fees, markets, ttFinancials, dexOverview] = await Promise.allSettled([
+  const [allProtocols, fees, markets, dexOverview, forks] = await Promise.allSettled([
     fetchAllProtocols(),
     fetchFeesOverview(),
     fetchCoinGeckoMarketsAll(),
-    fetchTokenTerminalAllFinancials(),
     fetchDexOverview(),
+    fetchLlamaForks(),
   ])
 
   // Fetch historical revenue for top 30 fee-earning protocols
@@ -276,8 +266,8 @@ export async function fetchMoatsData() {
     allProtocols: allProtocols.status === 'fulfilled' ? allProtocols.value : null,
     fees: fees.status === 'fulfilled' ? fees.value : null,
     markets: markets.status === 'fulfilled' ? markets.value : null,
-    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
     dexOverview: dexOverview.status === 'fulfilled' ? dexOverview.value : null,
+    forks: forks.status === 'fulfilled' ? forks.value : null,
     protocolDetails: protocolDetails
       .map((r, i) => ({ slug: top30Slugs[i], data: r.status === 'fulfilled' ? r.value : null }))
       .filter(r => r.data),
@@ -335,10 +325,9 @@ export async function fetchDeveloperActivityData() {
     'compound-governance-token', 'synthetix-network-token', 'rocket-pool', 'celestia', 'eigenlayer'
   ]
 
-  const [coinDetails, fees, ttFinancials] = await Promise.allSettled([
+  const [coinDetails, fees] = await Promise.allSettled([
     Promise.allSettled(targetCoins.map(id => fetchCoinGeckoDetail(id))),
     fetchFeesOverview(),
-    fetchTokenTerminalAllFinancials(),
   ])
 
   const coins = coinDetails.status === 'fulfilled'
@@ -351,23 +340,24 @@ export async function fetchDeveloperActivityData() {
   return {
     coins,
     fees: fees.status === 'fulfilled' ? fees.value : null,
-    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
   }
 }
 
 export async function fetchCapitalEfficiencyData() {
-  const [protocols, fees, markets, ttFinancials] = await Promise.allSettled([
+  const [protocols, fees, feesRevenue, markets, yields] = await Promise.allSettled([
     fetchAllProtocols(),
     fetchFeesOverview(),
+    fetchLlamaFeesRevenue(),
     fetchCoinGeckoMarketsAll(),
-    fetchTokenTerminalAllFinancials(),
+    fetchLlamaYields(),
   ])
 
   return {
     protocols: protocols.status === 'fulfilled' ? protocols.value : null,
     fees: fees.status === 'fulfilled' ? fees.value : null,
+    feesRevenue: feesRevenue.status === 'fulfilled' ? feesRevenue.value : null,
     markets: markets.status === 'fulfilled' ? markets.value : null,
-    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
+    yields: yields.status === 'fulfilled' ? yields.value : null,
   }
 }
 
@@ -488,12 +478,12 @@ export async function fetchCoinGeckoTrending() {
 }
 
 export async function fetchTokenomicsStudyData() {
-  // Fetch broad CoinGecko data for ALL 1000 coins + Token Terminal financials
-  const [protocols, fees, markets, ttFinancials, categories] = await Promise.allSettled([
+  // Fetch broad CoinGecko data for ALL 1000 coins + DeFiLlama Pro emissions
+  const [protocols, fees, markets, emissions, categories] = await Promise.allSettled([
     fetchAllProtocols(),
     fetchFeesOverview(),
     fetchCoinGeckoMarketsAll(),
-    fetchTokenTerminalAllFinancials(),
+    fetchLlamaEmissions(),
     fetchCoinGeckoCategories(),
   ])
 
@@ -520,7 +510,7 @@ export async function fetchTokenomicsStudyData() {
     protocols: protocols.status === 'fulfilled' ? protocols.value : null,
     fees: fees.status === 'fulfilled' ? fees.value : null,
     markets: allMarkets,
-    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
+    emissions: emissions.status === 'fulfilled' ? emissions.value : null,
     categories: categories.status === 'fulfilled' ? categories.value : null,
     coinDetails,
   }
