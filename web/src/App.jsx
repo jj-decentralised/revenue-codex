@@ -6,6 +6,7 @@ import SentimentTab from './components/tabs/SentimentTab'
 import RevenueQualityTab from './components/tabs/RevenueQualityTab'
 import MoatsTab from './components/tabs/MoatsTab'
 import FutureLeadersTab from './components/tabs/FutureLeadersTab'
+import MarketStructureTab from './components/tabs/MarketStructureTab'
 
 const TABS = [
   { id: 'valuations', label: 'Valuations & Multiples' },
@@ -13,6 +14,7 @@ const TABS = [
   { id: 'quality', label: 'Revenue Quality' },
   { id: 'moats', label: 'Moats' },
   { id: 'future', label: 'Future Leaders' },
+  { id: 'structure', label: 'Market Structure' },
 ]
 
 const TAB_COMPONENTS = {
@@ -21,6 +23,7 @@ const TAB_COMPONENTS = {
   quality: RevenueQualityTab,
   moats: MoatsTab,
   future: FutureLeadersTab,
+  structure: MarketStructureTab,
 }
 
 export default function App() {
