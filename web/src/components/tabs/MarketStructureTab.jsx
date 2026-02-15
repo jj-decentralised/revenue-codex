@@ -6,6 +6,12 @@ import NarrativeBox from '../NarrativeBox'
 import LoadingSpinner from '../LoadingSpinner'
 import { formatCurrency, formatPercent, formatNumber } from '../../utils/helpers'
 
+// Top DEX protocols to fetch individual data for
+const TOP_DEX_PROTOCOLS = [
+  'uniswap', 'raydium', 'orca', 'pancakeswap', 'curve', 'aerodrome',
+  'sushiswap', 'balancer', 'jupiter', 'trader-joe'
+]
+
 export default function MarketStructureTab() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -13,20 +19,50 @@ export default function MarketStructureTab() {
 
   useEffect(() => {
     async function fetchData() {
-      const results = await Promise.allSettled([
+      // Build all fetch promises
+      const fetchPromises = [
+        // CoinGecko Pro data via proxy
         fetch('/api/coingecko?action=exchanges').then(r => r.json()),
         fetch('/api/coingecko?action=global').then(r => r.json()),
         fetch('/api/coingecko?action=markets').then(r => r.json()),
+        fetch('/api/coingecko?action=categories').then(r => r.json()),
+        // DeFiLlama data (direct)
         fetch('https://api.llama.fi/overview/dexs').then(r => r.json()),
-      ])
+        fetch('https://bridges.llama.fi/bridges').then(r => r.json()),
+        fetch('https://api.llama.fi/overview/derivatives').then(r => r.json()),
+        // Individual DEX protocol data
+        ...TOP_DEX_PROTOCOLS.map(protocol =>
+          fetch(`https://api.llama.fi/summary/dexs/${protocol}`).then(r => r.json())
+        )
+      ]
 
-      const [exchangesRes, globalRes, marketsRes, dexRes] = results
+      const results = await Promise.allSettled(fetchPromises)
+
+      // Parse results
+      const [
+        exchangesRes, globalRes, marketsRes, categoriesRes,
+        dexOverviewRes, bridgesRes, derivativesRes,
+        ...dexProtocolResults
+      ] = results
+
+      // Map individual DEX results
+      const dexProtocolData = {}
+      TOP_DEX_PROTOCOLS.forEach((protocol, i) => {
+        const result = dexProtocolResults[i]
+        if (result.status === 'fulfilled') {
+          dexProtocolData[protocol] = result.value
+        }
+      })
 
       setData({
         exchanges: exchangesRes.status === 'fulfilled' ? exchangesRes.value : null,
         global: globalRes.status === 'fulfilled' ? globalRes.value : null,
         markets: marketsRes.status === 'fulfilled' ? marketsRes.value : null,
-        dex: dexRes.status === 'fulfilled' ? dexRes.value : null,
+        categories: categoriesRes.status === 'fulfilled' ? categoriesRes.value : null,
+        dexOverview: dexOverviewRes.status === 'fulfilled' ? dexOverviewRes.value : null,
+        bridges: bridgesRes.status === 'fulfilled' ? bridgesRes.value : null,
+        derivatives: derivativesRes.status === 'fulfilled' ? derivativesRes.value : null,
+        dexProtocols: dexProtocolData,
       })
     }
 
@@ -38,90 +74,118 @@ export default function MarketStructureTab() {
   if (loading) return <LoadingSpinner message="Loading market structure data..." />
   if (error && !data) return <div className="text-center py-20 text-(--color-danger)">Error: {error}</div>
 
-  // Extract global data
+  // ============ EXTRACT GLOBAL DATA ============
   const globalData = data?.global?.data || {}
   const totalMarketCap = globalData.total_market_cap?.usd || 0
   const totalVolume24h = globalData.total_volume?.usd || 0
   const btcDominance = globalData.market_cap_percentage?.btc || 0
+  const ethDominance = globalData.market_cap_percentage?.eth || 0
+  const activeExchanges = globalData.markets || 0
 
-  // Extract exchange data
+  // ============ EXTRACT EXCHANGE DATA ============
   const exchanges = data?.exchanges || []
-  const cexExchanges = exchanges.filter(e => !e.centralized === false || e.centralized === undefined)
+  const numExchangesTracked = exchanges.length
 
-  // Extract DEX data from DeFiLlama
-  const dexData = data?.dex || {}
-  const totalDexVolume24h = dexData.total24h || 0
-  const dexProtocols = dexData.protocols || []
+  // Estimate BTC price for volume conversion
+  const btcPrice = totalMarketCap > 0 && btcDominance > 0
+    ? (totalMarketCap * btcDominance / 100) / (19700000) // ~19.7M BTC mined
+    : 50000
 
-  // Calculate CEX total volume (from CoinGecko exchanges)
-  const totalCexVolume24h = cexExchanges.reduce((sum, e) => sum + (e.trade_volume_24h_btc || 0), 0) * (globalData.market_cap_percentage?.btc ? totalMarketCap / 100 * btcDominance / cexExchanges.reduce((sum, e) => sum + (e.trade_volume_24h_btc || 0), 0) : 50000)
+  // Calculate CEX total volume
+  const cexVolumeEstimate = exchanges.reduce((sum, e) => {
+    return sum + (e.trade_volume_24h_btc || 0) * btcPrice
+  }, 0)
 
-  // Better CEX volume estimate using reported USD volumes if available
-  const cexVolumeEstimate = exchanges.length > 0
-    ? exchanges.reduce((sum, e) => {
-        // CoinGecko reports volume in BTC, estimate USD using ~$50k BTC price
-        const btcPrice = totalMarketCap > 0 && globalData.market_cap_percentage?.btc
-          ? (totalMarketCap * globalData.market_cap_percentage.btc / 100) / 21000000 * 0.93 // ~93% of supply mined
-          : 50000
-        return sum + (e.trade_volume_24h_btc || 0) * btcPrice
-      }, 0)
-    : totalVolume24h - totalDexVolume24h
+  // ============ EXTRACT DEX DATA ============
+  const dexOverview = data?.dexOverview || {}
+  const totalDexVolume24h = dexOverview.total24h || 0
+  const dexProtocols = (dexOverview.protocols || [])
+    .filter(p => p.total24h > 0)
+    .sort((a, b) => (b.total24h || 0) - (a.total24h || 0))
 
+  // ============ EXTRACT DERIVATIVES DATA ============
+  const derivativesData = data?.derivatives || {}
+  const totalDerivativesVolume = derivativesData.total24h || 0
+  const derivativesProtocols = (derivativesData.protocols || [])
+    .filter(p => p.total24h > 0)
+    .sort((a, b) => (b.total24h || 0) - (a.total24h || 0))
+
+  // ============ EXTRACT BRIDGES DATA ============
+  const bridgesData = data?.bridges?.bridges || []
+  const topBridges = [...bridgesData]
+    .filter(b => b.lastDayVolume > 0)
+    .sort((a, b) => (b.lastDayVolume || 0) - (a.lastDayVolume || 0))
+    .slice(0, 15)
+
+  // ============ EXTRACT MARKETS DATA ============
+  const markets = data?.markets || []
+  const topCoinsByVolume = [...markets]
+    .filter(m => m.total_volume > 0)
+    .sort((a, b) => (b.total_volume || 0) - (a.total_volume || 0))
+    .slice(0, 20)
+
+  // ============ CALCULATE METRICS ============
   // DEX/CEX Volume Ratio
-  const dexCexRatio = cexVolumeEstimate > 0 ? (totalDexVolume24h / cexVolumeEstimate * 100) : 0
+  const dexCexRatio = cexVolumeEstimate > 0 ? (totalDexVolume24h / cexVolumeEstimate) : 0
   const dexSharePercent = totalDexVolume24h > 0 && cexVolumeEstimate > 0
     ? (totalDexVolume24h / (totalDexVolume24h + cexVolumeEstimate) * 100)
     : 0
 
-  // Calculate Herfindahl Index (HHI) from top exchanges
-  const topExchangesByVolume = [...exchanges]
+  // ============ EXCHANGE RANKINGS ============
+  const topCexByVolume = [...exchanges]
     .filter(e => e.trade_volume_24h_btc > 0)
     .sort((a, b) => (b.trade_volume_24h_btc || 0) - (a.trade_volume_24h_btc || 0))
     .slice(0, 20)
+    .map(e => ({
+      name: e.name,
+      volume: (e.trade_volume_24h_btc || 0) * btcPrice,
+      volumeBtc: e.trade_volume_24h_btc || 0,
+      trustScore: e.trust_score || 0,
+      pairs: e.number_of_trading_pairs || 0,
+      year: e.year_established,
+      country: e.country,
+    }))
 
-  const totalTopVolume = topExchangesByVolume.reduce((sum, e) => sum + (e.trade_volume_24h_btc || 0), 0)
-  const marketShares = topExchangesByVolume.map(e => ({
-    name: e.name,
-    share: totalTopVolume > 0 ? (e.trade_volume_24h_btc / totalTopVolume) * 100 : 0,
-    volume: e.trade_volume_24h_btc,
-    trustScore: e.trust_score,
-    pairs: e.num_trade_pairs || 0,
-    centralized: e.centralized !== false,
+  // ============ HERFINDAHL INDEX (HHI) ============
+  const totalTopVolume = topCexByVolume.reduce((sum, e) => sum + e.volume, 0)
+  const marketShares = topCexByVolume.map(e => ({
+    ...e,
+    share: totalTopVolume > 0 ? (e.volume / totalTopVolume) * 100 : 0,
   }))
-
-  // HHI = sum of squared market shares (scale 0-10000)
   const hhi = marketShares.reduce((sum, e) => sum + Math.pow(e.share, 2), 0)
   const hhiClassification = hhi > 2500 ? 'Concentrated' : hhi > 1500 ? 'Moderately Concentrated' : 'Competitive'
 
-  // DEX historical data for area chart (if available)
-  const dexHistory = dexData.totalDataChart || []
+  // Trust score color coding function
+  const getTrustScoreColor = (score) => {
+    if (score >= 9) return colors.success
+    if (score >= 7) return colors.primary
+    if (score >= 5) return colors.warning
+    return colors.danger
+  }
 
-  // Volume by category data
-  const spotVolume = cexVolumeEstimate
-  const derivativesVolume = totalVolume24h * 0.75 // Derivatives typically ~75% of total
-  const dexSpotVolume = totalDexVolume24h * 0.85 // Most DEX volume is spot
-  const dexPerpsVolume = totalDexVolume24h * 0.15 // Growing perps segment
-
-  const volumeCategories = [
-    { name: 'CEX Spot', volume: spotVolume * 0.25 },
-    { name: 'CEX Derivatives', volume: derivativesVolume },
-    { name: 'DEX Spot', volume: dexSpotVolume },
-    { name: 'DEX Perps', volume: dexPerpsVolume },
-  ].sort((a, b) => b.volume - a.volume)
+  // ============ DEX PROTOCOL DETAILS ============
+  const dexProtocolDetails = Object.entries(data?.dexProtocols || {}).map(([name, details]) => ({
+    name,
+    displayName: details?.name || name,
+    total24h: details?.total24h || 0,
+    total7d: details?.total7d || 0,
+    chains: details?.chains?.length || 0,
+    change24h: details?.change_1d || 0,
+  })).filter(p => p.total24h > 0).sort((a, b) => b.total24h - a.total24h)
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* KPI Cards Row 1 */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <KPICard
-          title="Total Crypto Market Cap"
+          title="Total Market Cap"
           value={formatCurrency(totalMarketCap)}
           subtitle="All cryptocurrencies"
         />
         <KPICard
-          title="24h Trading Volume"
+          title="24h Volume"
           value={formatCurrency(totalVolume24h)}
-          subtitle="Global volume"
+          subtitle="Global trading"
         />
         <KPICard
           title="BTC Dominance"
@@ -129,119 +193,175 @@ export default function MarketStructureTab() {
           subtitle="Market cap share"
         />
         <KPICard
-          title="DEX Volume Share"
-          value={formatPercent(dexSharePercent)}
-          subtitle={`vs CEX: ${formatCurrency(totalDexVolume24h)}`}
+          title="ETH Dominance"
+          value={formatPercent(ethDominance)}
+          subtitle="Market cap share"
+        />
+        <KPICard
+          title="DEX/CEX Ratio"
+          value={`${(dexCexRatio * 100).toFixed(1)}%`}
+          subtitle={`DEX: ${formatCurrency(totalDexVolume24h)}`}
+        />
+        <KPICard
+          title="Exchanges Tracked"
+          value={formatNumber(numExchangesTracked, 0)}
+          subtitle="CoinGecko Pro"
         />
       </div>
 
-      {/* CEX vs DEX Volume Share */}
-      <ChartCard title="CEX vs DEX Volume Share" subtitle="Centralized vs decentralized exchange volume comparison">
-        {dexHistory.length > 0 ? (
-          <Plot
-            data={[
-              {
-                x: dexHistory.map(d => new Date(d[0] * 1000).toISOString().split('T')[0]),
-                y: dexHistory.map(d => d[1]),
-                type: 'scatter',
-                mode: 'lines',
-                fill: 'tozeroy',
-                name: 'DEX Volume',
-                line: { color: colors.secondary, width: 2 },
-                fillcolor: 'rgba(139, 92, 246, 0.3)',
-                hovertemplate: 'DEX: $%{y:,.0f}<extra></extra>',
-              },
-            ]}
-            layout={{
-              ...defaultLayout,
-              height: 350,
-              yaxis: { ...defaultLayout.yaxis, title: 'Volume (USD)' },
-              xaxis: { ...defaultLayout.xaxis, title: 'Date' },
-            }}
-            config={defaultConfig}
-            className="w-full"
-          />
-        ) : (
-          <Plot
-            data={[
-              {
-                x: ['CEX', 'DEX'],
-                y: [cexVolumeEstimate, totalDexVolume24h],
-                type: 'bar',
-                marker: { color: [colors.primary, colors.secondary] },
-                hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>',
-              },
-            ]}
-            layout={{
-              ...defaultLayout,
-              height: 300,
-              yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
-            }}
-            config={defaultConfig}
-            className="w-full"
-          />
-        )}
-      </ChartCard>
-
-      {/* Exchange Rankings Scatter */}
-      <ChartCard title="Exchange Rankings Scatter" subtitle="X = Trust Score · Y = 24h Volume · Size = Trading Pairs · Color: Blue = CEX, Purple = DEX">
+      {/* CEX Rankings */}
+      <ChartCard title="CEX Rankings — Top 20 by 24h Volume" subtitle="Centralized exchanges from CoinGecko Pro · Color = Trust Score">
         <Plot
-          data={[
-            {
-              x: marketShares.filter(e => e.centralized).map(e => e.trustScore || 0),
-              y: marketShares.filter(e => e.centralized).map(e => e.volume),
-              text: marketShares.filter(e => e.centralized).map(e => `${e.name}<br>Pairs: ${e.pairs}<br>Share: ${e.share.toFixed(1)}%`),
-              mode: 'markers',
-              type: 'scatter',
-              name: 'CEX',
-              marker: {
-                color: colors.primary,
-                size: marketShares.filter(e => e.centralized).map(e => Math.max(8, Math.min(50, Math.sqrt(e.pairs) * 1.5))),
-                opacity: 0.7,
-                line: { width: 1, color: '#FFF' },
-              },
-              hovertemplate: '%{text}<extra>CEX</extra>',
+          data={[{
+            x: topCexByVolume.map(e => e.name),
+            y: topCexByVolume.map(e => e.volume),
+            type: 'bar',
+            marker: {
+              color: topCexByVolume.map(e => getTrustScoreColor(e.trustScore)),
+              line: { width: 1, color: '#FFFFFF' },
             },
-            {
-              x: marketShares.filter(e => !e.centralized).map(e => e.trustScore || 0),
-              y: marketShares.filter(e => !e.centralized).map(e => e.volume),
-              text: marketShares.filter(e => !e.centralized).map(e => `${e.name}<br>Pairs: ${e.pairs}<br>Share: ${e.share.toFixed(1)}%`),
-              mode: 'markers',
-              type: 'scatter',
-              name: 'DEX',
-              marker: {
-                color: colors.secondary,
-                size: marketShares.filter(e => !e.centralized).map(e => Math.max(8, Math.min(50, Math.sqrt(e.pairs) * 1.5))),
-                opacity: 0.7,
-                line: { width: 1, color: '#FFF' },
-              },
-              hovertemplate: '%{text}<extra>DEX</extra>',
-            },
-          ]}
+            text: topCexByVolume.map(e => `Trust: ${e.trustScore}/10`),
+            hovertemplate: '%{x}<br>Volume: $%{y:,.0f}<br>%{text}<extra></extra>',
+          }]}
           layout={{
             ...defaultLayout,
-            height: 450,
-            xaxis: { ...defaultLayout.xaxis, title: 'Trust Score', range: [0, 11] },
-            yaxis: { ...defaultLayout.yaxis, title: '24h Volume (BTC)', type: 'log' },
-            legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
+            height: 400,
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
+            annotations: [{
+              x: 0.99, y: 0.98, xref: 'paper', yref: 'paper', showarrow: false,
+              text: '🟢 Trust≥9 · 🔵 Trust≥7 · 🟡 Trust≥5 · 🔴 Trust<5',
+              font: { size: 10, color: '#6B7280' }, xanchor: 'right',
+            }],
           }}
           config={defaultConfig}
           className="w-full"
         />
       </ChartCard>
 
-      {/* Market Concentration (Herfindahl Index) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-1">
+      {/* DEX Rankings */}
+      <ChartCard title="DEX Rankings — Top 15 by 24h Volume" subtitle="Decentralized exchanges from DeFiLlama">
+        <Plot
+          data={[{
+            x: dexProtocols.slice(0, 15).map(p => p.displayName || p.name),
+            y: dexProtocols.slice(0, 15).map(p => p.total24h || 0),
+            type: 'bar',
+            marker: {
+              color: dexProtocols.slice(0, 15).map((_, i) => colors.palette[i % colors.palette.length]),
+            },
+            hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>',
+          }]}
+          layout={{
+            ...defaultLayout,
+            height: 380,
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
+          }}
+          config={defaultConfig}
+          className="w-full"
+        />
+      </ChartCard>
+
+      {/* CEX vs DEX Volume Share */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard title="CEX vs DEX Volume Share" subtitle="24h trading volume comparison">
+          <Plot
+            data={[{
+              values: [cexVolumeEstimate, totalDexVolume24h],
+              labels: ['CEX', 'DEX'],
+              type: 'pie',
+              hole: 0.5,
+              marker: {
+                colors: [colors.primary, colors.secondary],
+              },
+              textinfo: 'label+percent',
+              textfont: { size: 14, color: '#FFFFFF' },
+              hovertemplate: '%{label}<br>$%{value:,.0f}<br>%{percent}<extra></extra>',
+            }]}
+            layout={{
+              ...defaultLayout,
+              height: 320,
+              showlegend: true,
+              legend: { ...defaultLayout.legend, orientation: 'h', y: -0.1 },
+              annotations: [{
+                text: `<b>${formatCurrency(cexVolumeEstimate + totalDexVolume24h)}</b><br>Total`,
+                x: 0.5, y: 0.5, showarrow: false,
+                font: { size: 14, color: '#111827' },
+              }],
+            }}
+            config={defaultConfig}
+            className="w-full"
+          />
+        </ChartCard>
+
+        <ChartCard title="Derivatives vs Spot DEX Volume" subtitle="24h volume by market type · DeFiLlama">
+          <Plot
+            data={[{
+              x: ['DEX Spot', 'Derivatives'],
+              y: [totalDexVolume24h, totalDerivativesVolume],
+              type: 'bar',
+              marker: {
+                color: [colors.secondary, colors.rose],
+              },
+              hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>',
+            }]}
+            layout={{
+              ...defaultLayout,
+              height: 320,
+              yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
+            }}
+            config={defaultConfig}
+            className="w-full"
+          />
+        </ChartCard>
+      </div>
+
+      {/* Exchange Trust Score vs Volume Scatter */}
+      <ChartCard title="Exchange Trust Score vs Volume" subtitle="X = Trust Score · Y = 24h Volume · Size = Number of Trading Pairs">
+        <Plot
+          data={[{
+            x: marketShares.map(e => e.trustScore),
+            y: marketShares.map(e => e.volume),
+            text: marketShares.map(e => `${e.name}<br>Pairs: ${formatNumber(e.pairs, 0)}<br>Share: ${e.share.toFixed(1)}%`),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+              color: marketShares.map(e => getTrustScoreColor(e.trustScore)),
+              size: marketShares.map(e => Math.max(10, Math.min(60, Math.sqrt(e.pairs) * 1.2))),
+              opacity: 0.75,
+              line: { width: 1, color: '#FFFFFF' },
+            },
+            hovertemplate: '%{text}<extra></extra>',
+          }]}
+          layout={{
+            ...defaultLayout,
+            height: 420,
+            xaxis: { ...defaultLayout.xaxis, title: 'Trust Score', range: [0, 11], dtick: 1 },
+            yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)', type: 'log' },
+          }}
+          config={defaultConfig}
+          className="w-full"
+        />
+      </ChartCard>
+
+      {/* Market Concentration (HHI) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-1 space-y-4">
           <KPICard
             title="Herfindahl Index (HHI)"
             value={hhi.toFixed(0)}
             subtitle={hhiClassification}
-            className="h-full"
+            className="h-auto"
           />
+          <div className="bg-white rounded-lg border border-gray-200 p-4 text-sm text-gray-600">
+            <p><strong>HHI Scale:</strong></p>
+            <p>• &lt;1500: Competitive</p>
+            <p>• 1500–2500: Moderate</p>
+            <p>• &gt;2500: Concentrated</p>
+          </div>
         </div>
-        <div className="lg:col-span-2">
-          <ChartCard title="Market Share by Exchange" subtitle="Top exchanges by trading volume share">
+        <div className="lg:col-span-3">
+          <ChartCard title="Market Share by Exchange" subtitle="Top 10 exchanges by trading volume share">
             <Plot
               data={[{
                 x: marketShares.slice(0, 10).map(e => e.name),
@@ -254,17 +374,14 @@ export default function MarketStructureTab() {
               }]}
               layout={{
                 ...defaultLayout,
-                height: 280,
+                height: 300,
                 xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
                 yaxis: { ...defaultLayout.yaxis, title: 'Market Share (%)' },
                 annotations: [{
-                  x: 0.5,
-                  y: 1.12,
-                  xref: 'paper',
-                  yref: 'paper',
-                  text: hhi > 2500 ? '⚠️ Concentrated (HHI > 2500)' : hhi > 1500 ? '📊 Moderate (1500 < HHI < 2500)' : '✅ Competitive (HHI < 1500)',
+                  x: 0.5, y: 1.1, xref: 'paper', yref: 'paper',
+                  text: hhi > 2500 ? '⚠️ Concentrated Market' : hhi > 1500 ? '📊 Moderate Concentration' : '✅ Competitive Market',
                   showarrow: false,
-                  font: { size: 11, color: hhi > 2500 ? colors.danger : hhi > 1500 ? colors.warning : colors.success },
+                  font: { size: 12, color: hhi > 2500 ? colors.danger : hhi > 1500 ? colors.warning : colors.success },
                 }],
               }}
               config={defaultConfig}
@@ -274,21 +391,23 @@ export default function MarketStructureTab() {
         </div>
       </div>
 
-      {/* Volume by Category */}
-      <ChartCard title="Volume by Category" subtitle="Trading volume breakdown: Spot vs Derivatives, CEX vs DEX">
+      {/* Top Coins by Volume */}
+      <ChartCard title="Top Coins by 24h Trading Volume" subtitle="Top 20 cryptocurrencies by trading volume · CoinGecko Pro">
         <Plot
           data={[{
-            x: volumeCategories.map(c => c.name),
-            y: volumeCategories.map(c => c.volume),
+            x: topCoinsByVolume.map(c => c.symbol?.toUpperCase() || c.name),
+            y: topCoinsByVolume.map(c => c.total_volume || 0),
             type: 'bar',
             marker: {
-              color: [colors.primary, colors.indigo, colors.secondary, colors.rose],
+              color: topCoinsByVolume.map((_, i) => colors.palette[i % colors.palette.length]),
             },
-            hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>',
+            text: topCoinsByVolume.map(c => c.name),
+            hovertemplate: '%{text} (%{x})<br>Volume: $%{y:,.0f}<extra></extra>',
           }]}
           layout={{
             ...defaultLayout,
-            height: 350,
+            height: 380,
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
             yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
           }}
           config={defaultConfig}
@@ -296,24 +415,85 @@ export default function MarketStructureTab() {
         />
       </ChartCard>
 
-      {/* Top DEX Protocols */}
-      {dexProtocols.length > 0 && (
-        <ChartCard title="Top DEX Protocols by Volume" subtitle="Decentralized exchange 24h trading volume — DeFiLlama">
+      {/* Bridge Volume */}
+      {topBridges.length > 0 && (
+        <ChartCard title="Bridge Volume — Top 15" subtitle="Cross-chain bridge 24h volume · DeFiLlama">
           <Plot
             data={[{
-              x: dexProtocols.slice(0, 15).map(p => p.name || p.displayName),
-              y: dexProtocols.slice(0, 15).map(p => p.total24h || 0),
+              x: topBridges.map(b => b.displayName || b.name),
+              y: topBridges.map(b => b.lastDayVolume || 0),
               type: 'bar',
               marker: {
-                color: dexProtocols.slice(0, 15).map((_, i) => colors.palette[i % colors.palette.length]),
+                color: topBridges.map((_, i) => colors.palette[i % colors.palette.length]),
               },
               hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>',
             }]}
             layout={{
               ...defaultLayout,
-              height: 350,
+              height: 380,
               xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
               yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
+            }}
+            config={defaultConfig}
+            className="w-full"
+          />
+        </ChartCard>
+      )}
+
+      {/* Top Derivatives Protocols */}
+      {derivativesProtocols.length > 0 && (
+        <ChartCard title="Derivatives Protocols — Top 15" subtitle="Perpetual & options protocols by 24h volume · DeFiLlama">
+          <Plot
+            data={[{
+              x: derivativesProtocols.slice(0, 15).map(p => p.displayName || p.name),
+              y: derivativesProtocols.slice(0, 15).map(p => p.total24h || 0),
+              type: 'bar',
+              marker: {
+                color: derivativesProtocols.slice(0, 15).map((_, i) => colors.palette[i % colors.palette.length]),
+              },
+              hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>',
+            }]}
+            layout={{
+              ...defaultLayout,
+              height: 380,
+              xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+              yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
+            }}
+            config={defaultConfig}
+            className="w-full"
+          />
+        </ChartCard>
+      )}
+
+      {/* Individual DEX Protocol Details */}
+      {dexProtocolDetails.length > 0 && (
+        <ChartCard title="Featured DEX Protocols — Deep Dive" subtitle="Individual protocol data with chain support · DeFiLlama">
+          <Plot
+            data={[
+              {
+                x: dexProtocolDetails.map(p => p.displayName),
+                y: dexProtocolDetails.map(p => p.total24h),
+                name: '24h Volume',
+                type: 'bar',
+                marker: { color: colors.primary },
+                hovertemplate: '%{x}<br>24h: $%{y:,.0f}<extra></extra>',
+              },
+              {
+                x: dexProtocolDetails.map(p => p.displayName),
+                y: dexProtocolDetails.map(p => p.total7d / 7),
+                name: '7d Avg Daily',
+                type: 'bar',
+                marker: { color: colors.secondary },
+                hovertemplate: '%{x}<br>7d Avg: $%{y:,.0f}<extra></extra>',
+              },
+            ]}
+            layout={{
+              ...defaultLayout,
+              height: 380,
+              barmode: 'group',
+              xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+              yaxis: { ...defaultLayout.yaxis, title: 'Volume (USD)' },
+              legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
             }}
             config={defaultConfig}
             className="w-full"
@@ -324,17 +504,24 @@ export default function MarketStructureTab() {
       {/* Narrative */}
       <NarrativeBox title="Market Structure Analysis">
         <p>
-          Market structure is shifting — DEX share of spot volume has grown from &lt;1% in 2020 to {dexSharePercent.toFixed(1)}% today.
-          Decentralized exchanges now process {formatCurrency(totalDexVolume24h)} in daily volume, driven by protocols like Uniswap, PancakeSwap, and emerging perps platforms.
+          <strong>DEX vs CEX:</strong> Decentralized exchanges now account for {dexSharePercent.toFixed(1)}% of combined volume,
+          processing {formatCurrency(totalDexVolume24h)} daily. The DEX/CEX ratio of {(dexCexRatio * 100).toFixed(1)}%
+          reflects growing on-chain trading adoption, though centralized venues still dominate with {formatCurrency(cexVolumeEstimate)} in daily volume.
         </p>
         <p>
-          Derivatives dominate total volume at approximately 75%, mirroring TradFi where futures volume exceeds spot by 5-10x.
-          This structural similarity suggests crypto markets are maturing toward institutional trading patterns.
+          <strong>Market Concentration:</strong> The Herfindahl Index of {hhi.toFixed(0)} indicates a {hhiClassification.toLowerCase()} exchange market.
+          The top exchange ({marketShares[0]?.name || 'N/A'}) holds {marketShares[0]?.share.toFixed(1) || 0}% market share —
+          significantly less concentrated than traditional equity markets where NYSE+NASDAQ control &gt;90% of US volume.
         </p>
         <p>
-          The Herfindahl Index of {hhi.toFixed(0)} indicates a {hhiClassification.toLowerCase()} market — unlike TradFi where NYSE+NASDAQ dominate US equities,
-          crypto has genuine multi-venue competition with {marketShares.length} major exchanges. The top exchange holds {marketShares[0]?.share.toFixed(1) || 0}% market share,
-          compared to 40%+ concentration in traditional markets.
+          <strong>Derivatives Dominance:</strong> On-chain derivatives volume ({formatCurrency(totalDerivativesVolume)})
+          {totalDerivativesVolume > totalDexVolume24h ? ' exceeds ' : ' trails '}
+          spot DEX volume, following the pattern seen in TradFi where futures typically exceed spot by 5–10×.
+        </p>
+        <p>
+          <strong>Cross-Chain Infrastructure:</strong> Bridge volume of {formatCurrency(topBridges.reduce((s, b) => s + (b.lastDayVolume || 0), 0))}
+          across top bridges enables multi-chain liquidity, with {topBridges[0]?.displayName || topBridges[0]?.name || 'leading bridges'}
+          processing the majority of cross-chain transfers.
         </p>
       </NarrativeBox>
     </div>

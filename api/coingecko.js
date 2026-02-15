@@ -23,6 +23,9 @@ export default async function handler(req, res) {
     case 'exchanges':
       endpoint = '/exchanges?per_page=50';
       break;
+    case 'categories':
+      endpoint = '/coins/categories?order=market_cap_desc';
+      break;
     case 'coin_chart':
       if (!coin_id || !days) {
         return res.status(400).json({ error: 'coin_id and days are required for coin_chart action' });
@@ -34,9 +37,6 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'coin_id is required for coin_detail action' });
       }
       endpoint = `/coins/${encodeURIComponent(coin_id)}?localization=false&tickers=false&community_data=true&developer_data=true`;
-      break;
-    case 'categories':
-      endpoint = '/coins/categories?order=market_cap_desc';
       break;
     case 'trending':
       endpoint = '/search/trending';
