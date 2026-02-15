@@ -153,7 +153,7 @@ export async function fetchTopHolders(slug, from, to) {
 export async function fetchAllProjectsSummary() {
   const query = `
     query AllProjects {
-      allProjects(page: 1, pageSize: 200) {
+      allProjects(page: 1, pageSize: 500) {
         slug
         name
         ticker

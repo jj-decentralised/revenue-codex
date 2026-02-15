@@ -1,52 +1,92 @@
 const TT_BASE = 'https://api.tokenterminal.com/v2'
 
+const HEADERS = (apiKey) => ({
+  'Authorization': `Bearer ${apiKey}`,
+  'Accept': 'application/json',
+})
+
+async function ttFetch(url, apiKey) {
+  const response = await fetch(url, { headers: HEADERS(apiKey) })
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`TT ${response.status}: ${text.slice(0, 200)}`)
+  }
+  return response.json()
+}
+
 export default async function handler(req, res) {
   const apiKey = process.env.TOKEN_TERMINAL_API_KEY
   if (!apiKey) {
     return res.status(500).json({ error: 'TOKEN_TERMINAL_API_KEY not configured' })
   }
 
-  const { endpoint, project_id, metric_id, interval } = req.query
+  const { endpoint, project_id, metric_id, interval, market_sector_id, start, end, granularity } = req.query
+
+  // Special endpoint: pull ALL key financial metrics in one call
+  if (endpoint === 'all-financials') {
+    try {
+      const metrics = ['revenue', 'fees', 'earnings', 'token_incentives', 'price_to_sales', 'price_to_earnings', 'active_users']
+      const results = await Promise.allSettled(
+        metrics.map(m => ttFetch(`${TT_BASE}/metrics/${m}`, apiKey))
+      )
+      const financials = {}
+      metrics.forEach((m, i) => {
+        financials[m] = results[i].status === 'fulfilled' ? results[i].value : null
+      })
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+      return res.status(200).json(financials)
+    } catch (err) {
+      return res.status(500).json({ error: err.message })
+    }
+  }
 
   let url
   switch (endpoint) {
     case 'projects':
       url = `${TT_BASE}/projects`
       break
-    case 'metrics':
+    case 'metrics': {
       if (!project_id) return res.status(400).json({ error: 'project_id required' })
-      url = `${TT_BASE}/projects/${project_id}/metrics?metric_id=${metric_id || 'revenue'}&interval=${interval || 'daily'}`
+      const params = new URLSearchParams()
+      params.set('metric_id', metric_id || 'revenue,fees,earnings')
+      params.set('interval', interval || 'daily')
+      if (start) params.set('start', start)
+      if (end) params.set('end', end)
+      if (granularity) params.set('granularity', granularity)
+      url = `${TT_BASE}/projects/${project_id}/metrics?${params}`
       break
-    case 'bulk-metrics':
-      url = `${TT_BASE}/metrics/${metric_id || 'revenue'}`
+    }
+    case 'bulk-metrics': {
+      const bParams = new URLSearchParams()
+      if (market_sector_id) bParams.set('market_sector_id', market_sector_id)
+      if (interval) bParams.set('interval', interval)
+      if (start) bParams.set('start', start)
+      if (end) bParams.set('end', end)
+      const qs = bParams.toString()
+      url = `${TT_BASE}/metrics/${metric_id || 'revenue'}${qs ? '?' + qs : ''}`
       break
+    }
     case 'project-detail':
       if (!project_id) return res.status(400).json({ error: 'project_id required' })
       url = `${TT_BASE}/projects/${project_id}`
       break
-    case 'aggregations':
-      url = `${TT_BASE}/metrics/${metric_id || 'revenue'}/aggregations`
+    case 'aggregations': {
+      const aParams = new URLSearchParams()
+      if (project_id) aParams.set('project_id', project_id)
+      if (market_sector_id) aParams.set('market_sector_id', market_sector_id)
+      const aqs = aParams.toString()
+      url = `${TT_BASE}/metrics/${metric_id || 'revenue'}/aggregations${aqs ? '?' + aqs : ''}`
+      break
+    }
+    case 'market-sectors':
+      url = `${TT_BASE}/market-sectors`
       break
     default:
-      return res.status(400).json({ error: 'Invalid endpoint. Use: projects, metrics, bulk-metrics, project-detail, aggregations' })
+      return res.status(400).json({ error: 'Invalid endpoint. Use: projects, metrics, bulk-metrics, project-detail, aggregations, market-sectors, all-financials' })
   }
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Accept': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      const text = await response.text()
-      return res.status(response.status).json({ error: text })
-    }
-
-    const data = await response.json()
-
-    // Cache for 5 minutes
+    const data = await ttFetch(url, apiKey)
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
     return res.status(200).json(data)
   } catch (err) {

@@ -148,19 +148,46 @@ export async function fetchFearGreedIndex(limit = 0) {
 }
 
 // ============================================================
-// Token Terminal (via serverless proxy)
+// Token Terminal (via serverless proxy) — Revenue & Income data
 // ============================================================
 export async function fetchTokenTerminalProjects() {
   return deduplicatedFetch('/api/token-terminal?endpoint=projects')
 }
 
-export async function fetchTokenTerminalMetrics(projectId, metric = 'revenue', interval = 'daily') {
-  const params = new URLSearchParams({ endpoint: 'metrics', project_id: projectId, metric_id: metric, interval })
+export async function fetchTokenTerminalMetrics(projectId, metrics = 'revenue,fees,earnings', interval = 'daily') {
+  const params = new URLSearchParams({ endpoint: 'metrics', project_id: projectId, metric_id: metrics, interval })
   return deduplicatedFetch(`/api/token-terminal?${params}`)
 }
 
 export async function fetchTokenTerminalBulkMetrics(metric = 'revenue') {
   const params = new URLSearchParams({ endpoint: 'bulk-metrics', metric_id: metric })
+  return deduplicatedFetch(`/api/token-terminal?${params}`)
+}
+
+export async function fetchTokenTerminalMarketSectors() {
+  return deduplicatedFetch('/api/token-terminal?endpoint=market-sectors')
+}
+
+export async function fetchTokenTerminalAggregations(metric = 'revenue', projectId) {
+  const params = new URLSearchParams({ endpoint: 'aggregations', metric_id: metric })
+  if (projectId) params.set('project_id', projectId)
+  return deduplicatedFetch(`/api/token-terminal?${params}`)
+}
+
+// Pull ALL key financial metrics for ALL projects in one call
+// Returns { revenue, fees, earnings, token_incentives, price_to_sales, price_to_earnings, active_users }
+export async function fetchTokenTerminalAllFinancials() {
+  return deduplicatedFetch('/api/token-terminal?endpoint=all-financials')
+}
+
+// Pull historical revenue+fees+earnings for a specific project
+export async function fetchTokenTerminalIncomeStatement(projectId) {
+  const params = new URLSearchParams({
+    endpoint: 'metrics',
+    project_id: projectId,
+    metric_id: 'revenue,fees,earnings,token_incentives,cost_of_revenue',
+    interval: 'daily',
+  })
   return deduplicatedFetch(`/api/token-terminal?${params}`)
 }
 
@@ -179,16 +206,20 @@ export async function fetchYahooHistorical(symbol, period = '2y') {
 // Aggregated fetchers for tabs
 // ============================================================
 export async function fetchValuationsData() {
-  const [fees, protocols, fng] = await Promise.allSettled([
+  const [fees, protocols, fng, markets, ttFinancials] = await Promise.allSettled([
     fetchFeesOverview(),
     fetchAllProtocols(),
     fetchFearGreedIndex(365),
+    fetchCoinGeckoMarketsAll(),
+    fetchTokenTerminalAllFinancials(),
   ])
 
   return {
     fees: fees.status === 'fulfilled' ? fees.value : null,
     protocols: protocols.status === 'fulfilled' ? protocols.value : null,
     fearGreed: fng.status === 'fulfilled' ? fng.value : null,
+    markets: markets.status === 'fulfilled' ? markets.value : null,
+    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
   }
 }
 
@@ -205,35 +236,50 @@ export async function fetchSentimentData() {
 }
 
 export async function fetchRevenueQualityData() {
-  const [fees, stablecoins, stablecoinCharts] = await Promise.allSettled([
+  const [fees, stablecoins, stablecoinCharts, ttFinancials] = await Promise.allSettled([
     fetchFeesOverview(),
     fetchStablecoins(),
     fetchStablecoinCharts(),
+    fetchTokenTerminalAllFinancials(),
   ])
 
   return {
     fees: fees.status === 'fulfilled' ? fees.value : null,
     stablecoins: stablecoins.status === 'fulfilled' ? stablecoins.value : null,
     stablecoinCharts: stablecoinCharts.status === 'fulfilled' ? stablecoinCharts.value : null,
+    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
   }
 }
 
 export async function fetchMoatsData() {
-  const targetProtocols = ['aave', 'uniswap', 'lido', 'maker', 'hyperliquid', 'tether', 'ethena']
-  const [allProtocols, fees] = await Promise.allSettled([
+  const [allProtocols, fees, markets, ttFinancials, dexOverview] = await Promise.allSettled([
     fetchAllProtocols(),
     fetchFeesOverview(),
+    fetchCoinGeckoMarketsAll(),
+    fetchTokenTerminalAllFinancials(),
+    fetchDexOverview(),
   ])
 
+  // Fetch historical revenue for top 30 fee-earning protocols
+  const feesProtocols = fees.status === 'fulfilled' ? (fees.value?.protocols || []) : []
+  const top30Slugs = feesProtocols
+    .filter(p => p.total24h > 0)
+    .sort((a, b) => (b.total24h || 0) - (a.total24h || 0))
+    .slice(0, 30)
+    .map(p => p.slug)
+
   const protocolDetails = await Promise.allSettled(
-    targetProtocols.map(p => fetchProtocolFees(p).catch(() => null))
+    top30Slugs.map(p => fetchProtocolFees(p).catch(() => null))
   )
 
   return {
     allProtocols: allProtocols.status === 'fulfilled' ? allProtocols.value : null,
     fees: fees.status === 'fulfilled' ? fees.value : null,
+    markets: markets.status === 'fulfilled' ? markets.value : null,
+    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
+    dexOverview: dexOverview.status === 'fulfilled' ? dexOverview.value : null,
     protocolDetails: protocolDetails
-      .map((r, i) => ({ slug: targetProtocols[i], data: r.status === 'fulfilled' ? r.value : null }))
+      .map((r, i) => ({ slug: top30Slugs[i], data: r.status === 'fulfilled' ? r.value : null }))
       .filter(r => r.data),
   }
 }
@@ -280,14 +326,19 @@ export async function fetchCoinGeckoDetail(coinId) {
 }
 
 export async function fetchDeveloperActivityData() {
+  // Broader set — top 25 dev-active coins
   const targetCoins = [
     'ethereum', 'bitcoin', 'solana', 'uniswap', 'aave',
-    'chainlink', 'maker', 'arbitrum', 'polygon-ecosystem-token', 'lido-dao'
+    'chainlink', 'maker', 'arbitrum', 'polygon-ecosystem-token', 'lido-dao',
+    'optimism', 'near', 'cosmos', 'polkadot', 'avalanche-2',
+    'the-graph', 'filecoin', 'starknet', 'aptos', 'sui',
+    'compound-governance-token', 'synthetix-network-token', 'rocket-pool', 'celestia', 'eigenlayer'
   ]
 
-  const [coinDetails, fees] = await Promise.allSettled([
+  const [coinDetails, fees, ttFinancials] = await Promise.allSettled([
     Promise.allSettled(targetCoins.map(id => fetchCoinGeckoDetail(id))),
     fetchFeesOverview(),
+    fetchTokenTerminalAllFinancials(),
   ])
 
   const coins = coinDetails.status === 'fulfilled'
@@ -300,18 +351,23 @@ export async function fetchDeveloperActivityData() {
   return {
     coins,
     fees: fees.status === 'fulfilled' ? fees.value : null,
+    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
   }
 }
 
 export async function fetchCapitalEfficiencyData() {
-  const [protocols, fees] = await Promise.allSettled([
+  const [protocols, fees, markets, ttFinancials] = await Promise.allSettled([
     fetchAllProtocols(),
     fetchFeesOverview(),
+    fetchCoinGeckoMarketsAll(),
+    fetchTokenTerminalAllFinancials(),
   ])
 
   return {
     protocols: protocols.status === 'fulfilled' ? protocols.value : null,
     fees: fees.status === 'fulfilled' ? fees.value : null,
+    markets: markets.status === 'fulfilled' ? markets.value : null,
+    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
   }
 }
 
@@ -406,37 +462,66 @@ export async function fetchRiskPremiumData() {
 // ============================================================
 // CoinGecko Markets (via serverless proxy)
 // ============================================================
-export async function fetchCoinGeckoMarkets() {
-  const res = await fetch('/api/coingecko?action=markets')
-  if (!res.ok) throw new Error(`CoinGecko markets: ${res.status}`)
-  return res.json()
+export async function fetchCoinGeckoMarkets(page = 1) {
+  return deduplicatedFetch(`/api/coingecko?action=markets&page=${page}&per_page=250`)
+}
+
+// Fetch 1000 coins (4 pages × 250) — uses Pro API server-side pagination
+export async function fetchCoinGeckoMarketsAll() {
+  return deduplicatedFetch('/api/coingecko?action=markets_all')
+}
+
+export async function fetchCoinGeckoCategories() {
+  return deduplicatedFetch('/api/coingecko?action=categories')
+}
+
+export async function fetchCoinGeckoGlobal() {
+  return deduplicatedFetch('/api/coingecko?action=global')
+}
+
+export async function fetchCoinGeckoExchanges() {
+  return deduplicatedFetch('/api/coingecko?action=exchanges')
+}
+
+export async function fetchCoinGeckoTrending() {
+  return deduplicatedFetch('/api/coingecko?action=trending')
 }
 
 export async function fetchTokenomicsStudyData() {
-  const targetCoins = [
-    'ethereum', 'uniswap', 'aave', 'maker', 'lido-dao',
-    'chainlink', 'curve-dao-token', 'compound-governance-token',
-    'synthetix-network-token', 'gmx', 'pancakeswap-token', 'sushi'
-  ]
-
-  const [protocols, fees, markets, coinDetails] = await Promise.allSettled([
+  // Fetch broad CoinGecko data for ALL 1000 coins + Token Terminal financials
+  const [protocols, fees, markets, ttFinancials, categories] = await Promise.allSettled([
     fetchAllProtocols(),
     fetchFeesOverview(),
-    fetchCoinGeckoMarkets(),
-    Promise.allSettled(targetCoins.map(id => fetchCoinGeckoDetail(id))),
+    fetchCoinGeckoMarketsAll(),
+    fetchTokenTerminalAllFinancials(),
+    fetchCoinGeckoCategories(),
   ])
 
-  const coins = coinDetails.status === 'fulfilled'
-    ? coinDetails.value.map((r, i) => ({
-        id: targetCoins[i],
-        data: r.status === 'fulfilled' ? r.value : null,
-      })).filter(c => c.data)
-    : []
+  // Fetch detailed data for top 30 coins by market cap
+  const allMarkets = markets.status === 'fulfilled' ? (markets.value || []) : []
+  const topCoinIds = allMarkets
+    .filter(m => m.market_cap > 0)
+    .sort((a, b) => b.market_cap - a.market_cap)
+    .slice(0, 30)
+    .map(m => m.id)
+
+  const coinDetailsResults = await Promise.allSettled(
+    topCoinIds.map(id => fetchCoinGeckoDetail(id))
+  )
+
+  const coinDetails = coinDetailsResults
+    .map((r, i) => ({
+      id: topCoinIds[i],
+      data: r.status === 'fulfilled' ? r.value : null,
+    }))
+    .filter(c => c.data)
 
   return {
     protocols: protocols.status === 'fulfilled' ? protocols.value : null,
     fees: fees.status === 'fulfilled' ? fees.value : null,
-    markets: markets.status === 'fulfilled' ? markets.value : null,
-    coinDetails: coins,
+    markets: allMarkets,
+    ttFinancials: ttFinancials.status === 'fulfilled' ? ttFinancials.value : null,
+    categories: categories.status === 'fulfilled' ? categories.value : null,
+    coinDetails,
   }
 }
