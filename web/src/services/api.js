@@ -465,6 +465,27 @@ export async function fetchCoinGeckoCategories() {
   return deduplicatedFetch('/api/coingecko?action=categories')
 }
 
+export async function fetchCoinChart(coinId, days = 365) {
+  return deduplicatedFetch(`/api/coingecko?action=coin_chart&coin_id=${encodeURIComponent(coinId)}&days=${days}`)
+}
+
+// Fetch market chart data for multiple coins in parallel (with batching)
+export async function fetchCoinChartsBatch(coinIds, days = 365) {
+  const BATCH_SIZE = 6
+  const results = []
+  for (let i = 0; i < coinIds.length; i += BATCH_SIZE) {
+    const batch = coinIds.slice(i, i + BATCH_SIZE)
+    const batchResults = await Promise.allSettled(
+      batch.map(id => fetchCoinChart(id, days))
+    )
+    results.push(...batch.map((id, j) => ({
+      id,
+      data: batchResults[j].status === 'fulfilled' ? batchResults[j].value : null,
+    })))
+  }
+  return results
+}
+
 export async function fetchCoinGeckoGlobal() {
   return deduplicatedFetch('/api/coingecko?action=global')
 }

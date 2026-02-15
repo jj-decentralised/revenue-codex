@@ -128,7 +128,7 @@ export default function MEVStudyTab() {
 
   // === EXTRACT & PROCESS DATA ===
   const feesProtocols = data?.feesOverview?.protocols || []
-  const totalRevenue24h = data?.feesOverview?.total24h || 0
+  const totalRevenue24h = data?.feesOverview?.total24h || (data?.feesOverview?.protocols || []).reduce((s, p) => s + (p.total24h || 0), 0)
   const totalDataChartBreakdown = data?.feesOverview?.totalDataChartBreakdown || []
   const allProtocols = data?.protocols || []
 

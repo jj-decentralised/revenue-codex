@@ -5,6 +5,7 @@ import KPICard from '../KPICard'
 import NarrativeBox from '../NarrativeBox'
 import LoadingSpinner from '../LoadingSpinner'
 import RevenueBreakdownChart from '../RevenueBreakdownChart'
+import SectorTimeSeries from '../SectorTimeSeries'
 import { fetchValuationsData } from '../../services/api'
 import { formatCurrency, formatMultiple, formatPercent, categorizeSector } from '../../utils/helpers'
 import { valuationsNarrative } from '../../data/narratives'
@@ -28,11 +29,11 @@ export default function ValuationsTab() {
     if (!data) return null
 
     const feesProtocols = data?.fees?.protocols || []
-    const totalFees24h = data?.fees?.total24h || 0
-    const totalRevenue24h = data?.feesRevenue?.total24h || 0
+    const totalFees24h = data?.fees?.total24h || feesProtocols.reduce((s, p) => s + (p.total24h || 0), 0)
+    const revenueProtocols = data?.feesRevenue?.protocols || []
+    const totalRevenue24h = data?.feesRevenue?.total24h || revenueProtocols.reduce((s, p) => s + (p.total24h || 0), 0)
 
     // Revenue protocols lookup (per-protocol take rate)
-    const revenueProtocols = data?.feesRevenue?.protocols || []
     const revLookup = {}
     revenueProtocols.forEach(p => { if (p.slug) revLookup[p.slug.toLowerCase()] = p })
 
@@ -165,6 +166,8 @@ export default function ValuationsTab() {
   return (
     <div className="space-y-6">
       <RevenueBreakdownChart feesData={data?.fees} />
+
+      <SectorTimeSeries feesData={data?.fees} protocols={data?.protocols} markets={data?.markets} />
 
       <div className="text-xs text-(--color-text-secondary) text-right">
         {llamaProtocolCount.toLocaleString()} DeFiLlama protocols · {cgMarketCount.toLocaleString()} CoinGecko coins

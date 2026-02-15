@@ -24,12 +24,12 @@ export default function RevenueQualityTab() {
     if (!data) return null
 
     const feesProtocols = data?.fees?.protocols || []
-    const totalFees24h = data?.fees?.total24h || 0
-    const totalRevenue24h = data?.feesRevenue?.total24h || 0
+    const totalFees24h = data?.fees?.total24h || feesProtocols.reduce((s, p) => s + (p.total24h || 0), 0)
+    const revenueProtocols = data?.feesRevenue?.protocols || []
+    const totalRevenue24h = data?.feesRevenue?.total24h || revenueProtocols.reduce((s, p) => s + (p.total24h || 0), 0)
     const totalDataChartBreakdown = data?.fees?.totalDataChartBreakdown || []
 
     // Revenue protocols lookup (per-protocol take rate)
-    const revenueProtocols = data?.feesRevenue?.protocols || []
     const revLookup = {}
     revenueProtocols.forEach(p => { if (p.slug) revLookup[p.slug.toLowerCase()] = p })
 
