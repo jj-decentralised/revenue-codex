@@ -13,6 +13,7 @@ import YieldAnalysisTab from './components/tabs/YieldAnalysisTab'
 import MacroTab from './components/tabs/MacroTab'
 import OnChainEconomyTab from './components/tabs/OnChainEconomyTab'
 import DeveloperActivityTab from './components/tabs/DeveloperActivityTab'
+import OnChainMetricsTab from './components/tabs/OnChainMetricsTab'
 
 const TABS = [
   // Group 1: Revenue Fundamentals
@@ -31,6 +32,7 @@ const TABS = [
   { id: 'macro', label: 'Macro Correlations', group: 'Macro & On-Chain' },
   { id: 'onchain', label: 'On-Chain Economy', group: 'Macro & On-Chain' },
   { id: 'developer', label: 'Developer Activity', group: 'Macro & On-Chain' },
+  { id: 'onchainmetrics', label: 'On-Chain Metrics', group: 'Macro & On-Chain' },
 ]
 
 const TAB_COMPONENTS = {
@@ -46,6 +48,7 @@ const TAB_COMPONENTS = {
   macro: MacroTab,
   onchain: OnChainEconomyTab,
   developer: DeveloperActivityTab,
+  onchainmetrics: OnChainMetricsTab,
 }
 
 export default function App() {
