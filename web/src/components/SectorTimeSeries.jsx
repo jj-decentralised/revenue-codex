@@ -21,6 +21,9 @@ const SECTOR_COLORS = {
   'Memecoins':       '#FBBF24',
   'Payments':        '#06B6D4',
   'RWA':             '#84CC16',
+  'MEV':             '#DC2626',
+  'Launchpad':       '#A855F7',
+  'AI & DePIN':      '#0D9488',
   'Other':           '#9CA3AF',
 }
 
@@ -118,19 +121,19 @@ export default function SectorTimeSeries({ feesData, protocols, markets }) {
   const [mcapCharts, setMcapCharts] = useState(null)
   const [mcapLoading, setMcapLoading] = useState(true)
   const [revPeriod, setRevPeriod] = useState('all') // '1y', '6m', '3m', 'all'
-  const [mcapPeriod, setMcapPeriod] = useState('1y')
+  const [mcapPeriod, setMcapPeriod] = useState('all')
   const [revSmoothing, setRevSmoothing] = useState('7d') // 'raw', '7d', 'weekly'
 
-  // ── Fetch market cap chart data for top 30 coins ──
+  // ── Fetch market cap chart data for top 50 coins ──
   useEffect(() => {
     if (!markets || markets.length === 0) return
-    const top30 = markets
+    const top50 = markets
       .filter(m => m.market_cap > 0)
       .sort((a, b) => b.market_cap - a.market_cap)
-      .slice(0, 30)
+      .slice(0, 50)
       .map(m => m.id)
 
-    fetchCoinChartsBatch(top30, 365)
+    fetchCoinChartsBatch(top50, 'max')
       .then(setMcapCharts)
       .catch(() => setMcapCharts([]))
       .finally(() => setMcapLoading(false))
@@ -345,7 +348,7 @@ export default function SectorTimeSeries({ feesData, protocols, markets }) {
   function renderMcapChart() {
     if (mcapLoading) return (
       <div className="bg-white rounded-lg border border-(--color-border) p-8 text-center">
-        <div className="animate-pulse text-sm text-(--color-text-secondary)">Loading market cap data for top 30 coins…</div>
+        <div className="animate-pulse text-sm text-(--color-text-secondary)">Loading market cap data for top 50 coins…</div>
       </div>
     )
 
@@ -369,11 +372,11 @@ export default function SectorTimeSeries({ feesData, protocols, markets }) {
     return (
       <ChartCard
         title="Total Market Cap by Sector — Time Series"
-        subtitle={`Top 30 coins by market cap mapped to sectors · Latest: ${formatCurrency(latestTotal)} · Source: CoinGecko`}
+        subtitle={`Top 50 coins by market cap mapped to sectors · Latest: ${formatCurrency(latestTotal)} · Source: CoinGecko`}
       >
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <div className="flex rounded-md border border-(--color-border) overflow-hidden">
-            {[['3m', '3M'], ['6m', '6M'], ['1y', '1Y']].map(([k, label]) => (
+            {[['3m', '3M'], ['6m', '6M'], ['1y', '1Y'], ['all', 'All']].map(([k, label]) => (
               <button key={k} onClick={() => setMcapPeriod(k)}
                 className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${mcapPeriod === k ? 'bg-(--color-primary) text-white' : 'text-(--color-text-secondary) hover:bg-gray-50'}`}
               >{label}</button>

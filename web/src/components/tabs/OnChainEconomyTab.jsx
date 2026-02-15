@@ -134,30 +134,34 @@ function findComparableNation(gdp) {
   return sorted[0]
 }
 
-// Aggregate data by year
-function aggregateByYear(data, dateField, valueField) {
+// Aggregate data by year (dateField values may be Unix seconds — auto-detect)
+function aggregateByYear(data, dateField, valueField, valueMultiplier = 1) {
   const yearly = {}
   data.forEach(item => {
-    const date = new Date(item[dateField])
+    const raw = item[dateField]
+    const date = new Date(typeof raw === 'number' && raw < 1e12 ? raw * 1000 : raw)
     if (isNaN(date.getTime())) return
     const year = date.getFullYear()
+    if (year < 2000 || year > 2100) return
     if (!yearly[year]) yearly[year] = 0
-    yearly[year] += item[valueField] || 0
+    yearly[year] += (item[valueField] || 0) * valueMultiplier
   })
   return yearly
 }
 
-// Aggregate data by quarter
-function aggregateByQuarter(data, dateField, valueField) {
+// Aggregate data by quarter (dateField values may be Unix seconds — auto-detect)
+function aggregateByQuarter(data, dateField, valueField, valueMultiplier = 1) {
   const quarterly = {}
   data.forEach(item => {
-    const date = new Date(item[dateField])
+    const raw = item[dateField]
+    const date = new Date(typeof raw === 'number' && raw < 1e12 ? raw * 1000 : raw)
     if (isNaN(date.getTime())) return
     const year = date.getFullYear()
+    if (year < 2000 || year > 2100) return
     const quarter = Math.floor(date.getMonth() / 3) + 1
     const key = `${year} Q${quarter}`
     if (!quarterly[key]) quarterly[key] = 0
-    quarterly[key] += item[valueField] || 0
+    quarterly[key] += (item[valueField] || 0) * valueMultiplier
   })
   return quarterly
 }
@@ -218,8 +222,8 @@ export default function OnChainEconomyTab() {
   // Total hacked amount
   const totalHacked = hacks.reduce((s, h) => s + (h.amount || 0), 0)
   
-  // Total VC raised
-  const totalRaised = raises.reduce((s, r) => s + (r.amount || 0), 0)
+  // Total VC raised (DeFiLlama amounts are in millions)
+  const totalRaised = raises.reduce((s, r) => s + (r.amount || 0), 0) * 1e6
 
   // DEX volume
   const totalDexVolume24h = dexsData?.total24h || 0
@@ -313,7 +317,7 @@ export default function OnChainEconomyTab() {
   // Chart 6: Hack Losses Over Time
   // ===========================================
   const hacksWithDates = hacks.filter(h => h.date && h.amount)
-  const hacksByYear = aggregateByYear(hacksWithDates, 'date', 'amount')
+  const hacksByYear = aggregateByYear(hacksWithDates, 'date', 'amount', 1)
   const hackYears = Object.keys(hacksByYear).sort()
   const hackAmounts = hackYears.map(y => hacksByYear[y])
 
@@ -321,9 +325,30 @@ export default function OnChainEconomyTab() {
   // Chart 7: VC Investment Over Time
   // ===========================================
   const raisesWithDates = raises.filter(r => r.date && r.amount)
-  const raisesByQuarter = aggregateByQuarter(raisesWithDates, 'date', 'amount')
+  const raisesByQuarter = aggregateByQuarter(raisesWithDates, 'date', 'amount', 1e6)
   const raiseQuarters = Object.keys(raisesByQuarter).sort()
   const raiseAmounts = raiseQuarters.map(q => raisesByQuarter[q])
+
+  // VC Raises by Round Type over time (stacked area)
+  const roundTypes = {}
+  raisesWithDates.forEach(r => {
+    const raw = r.date
+    const date = new Date(typeof raw === 'number' && raw < 1e12 ? raw * 1000 : raw)
+    if (isNaN(date.getTime())) return
+    const year = date.getFullYear()
+    if (year < 2000 || year > 2100) return
+    const quarter = Math.floor(date.getMonth() / 3) + 1
+    const key = `${year} Q${quarter}`
+    const round = r.round || r.category || 'Unknown'
+    if (!roundTypes[round]) roundTypes[round] = {}
+    if (!roundTypes[round][key]) roundTypes[round][key] = 0
+    roundTypes[round][key] += (r.amount || 0) * 1e6
+  })
+  const sortedRounds = Object.entries(roundTypes)
+    .map(([round, qMap]) => ({ round, total: Object.values(qMap).reduce((a, b) => a + b, 0), qMap }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 12)
+  const allRaiseQuarters = raiseQuarters
 
   // ===========================================
   // Chart 8: Economic Activity by Chain (Fees breakdown)
@@ -475,7 +500,7 @@ export default function OnChainEconomyTab() {
           layout={{
             ...defaultLayout,
             height: 400,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Daily Fees (USD)' },
           }}
           config={defaultConfig}
@@ -628,7 +653,7 @@ export default function OnChainEconomyTab() {
             layout={{
               ...defaultLayout,
               height: 400,
-              xaxis: { ...defaultLayout.xaxis, title: 'Year' },
+              xaxis: { ...defaultLayout.xaxis, title: 'Year', type: 'category' },
               yaxis: { ...defaultLayout.yaxis, title: 'Amount Lost (USD)' },
             }}
             config={defaultConfig}
@@ -654,8 +679,37 @@ export default function OnChainEconomyTab() {
             layout={{
               ...defaultLayout,
               height: 400,
-              xaxis: { ...defaultLayout.xaxis, title: 'Quarter', tickangle: -45 },
+              xaxis: { ...defaultLayout.xaxis, title: 'Quarter', tickangle: -45, type: 'category' },
               yaxis: { ...defaultLayout.yaxis, title: 'Amount Raised (USD)' },
+            }}
+            config={defaultConfig}
+            className="w-full"
+          />
+        </ChartCard>
+      )}
+
+      {/* Chart 7b: VC Raises by Round Type Over Time */}
+      {sortedRounds.length > 0 && allRaiseQuarters.length > 0 && (
+        <ChartCard title="VC Raises by Round Type" subtitle="Quarterly VC investment broken down by funding round type">
+          <Plot
+            data={sortedRounds.map((r, i) => ({
+              x: allRaiseQuarters,
+              y: allRaiseQuarters.map(q => r.qMap[q] || 0),
+              type: 'bar',
+              name: r.round,
+              marker: {
+                color: colors.palette[i % colors.palette.length],
+                line: { width: 0 },
+              },
+              hovertemplate: `${r.round}<br>%{x}<br>$%{y:,.0f}<extra></extra>`,
+            }))}
+            layout={{
+              ...defaultLayout,
+              height: 450,
+              barmode: 'stack',
+              xaxis: { ...defaultLayout.xaxis, title: 'Quarter', tickangle: -45, type: 'category' },
+              yaxis: { ...defaultLayout.yaxis, title: 'Amount Raised (USD)' },
+              legend: { ...defaultLayout.legend, orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center' },
             }}
             config={defaultConfig}
             className="w-full"

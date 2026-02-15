@@ -60,23 +60,100 @@ export function calculatePERatio(marketCap, annualizedEarnings) {
 
 export function categorizeSector(category) {
   const mapping = {
+    // Exchanges & Trading
     'Dexes': 'Exchanges',
     'CEX': 'Exchanges',
     'Derivatives': 'Exchanges',
+    'Options': 'Exchanges',
+    'Perpetuals': 'Exchanges',
+    'DEX Aggregator': 'Exchanges',
+    'Trading App': 'Exchanges',
+    'Synthetics': 'Exchanges',
+    'Options Vault': 'Exchanges',
+
+    // DeFi Lending & Borrowing
     'Lending': 'DeFi Lending',
     'CDP': 'DeFi Lending',
+    'Leveraged Lending': 'DeFi Lending',
+    'Leveraged Farming': 'DeFi Lending',
+    'Flash Loans': 'DeFi Lending',
+    'Risk Curators': 'DeFi Lending',
+    'Onchain Capital Allocator': 'DeFi Lending',
+
+    // Infrastructure & L1/L2
     'Bridge': 'Infrastructure',
     'Chain': 'Infrastructure',
+    'Cross Chain Bridge': 'Infrastructure',
+    'Oracle': 'Infrastructure',
+    'Indexer': 'Infrastructure',
+    'Data Availability': 'Infrastructure',
+    'Rollup': 'Infrastructure',
+    'Interoperability': 'Infrastructure',
+    'Developer Tools': 'Infrastructure',
+    'Services': 'Infrastructure',
+    'Block Builders': 'Infrastructure',
+    'Wallets': 'Infrastructure',
+    'Identity': 'Infrastructure',
+    'Privacy': 'Infrastructure',
+    'Zero Knowledge': 'Infrastructure',
+    'Decentralized Storage': 'Infrastructure',
+
+    // Staking & Restaking
     'Liquid Staking': 'Staking',
     'Restaking': 'Staking',
+    'Liquid Restaking': 'Staking',
+    'Staking Pool': 'Staking',
+    'Node Operators': 'Staking',
+
+    // Stablecoins & Issuers
     'Stablecoins': 'Stablecoins',
+    'Stablecoin Issuer': 'Stablecoins',
+    'Algo-Stables': 'Stablecoins',
+
+    // RWA
     'RWA': 'RWA',
+    'RWA Lending': 'RWA',
+    'Tokenized Securities': 'RWA',
+
+    // DeFi Yield & Asset Management
     'Yield': 'DeFi Yield',
     'Yield Aggregator': 'DeFi Yield',
+    'Farm': 'DeFi Yield',
+    'Liquidity Manager': 'DeFi Yield',
+    'Liquid Vesting': 'DeFi Yield',
+    'Insurance': 'DeFi Yield',
+
+    // MEV & Automation
+    'MEV': 'MEV',
+    'Telegram Bot': 'MEV',
+    'SoFi': 'MEV',
+
+    // Consumer & Social
     'NFT Marketplace': 'Consumer',
+    'NFT Lending': 'Consumer',
     'Gaming': 'Consumer',
     'Social': 'Consumer',
     'Prediction Market': 'Consumer',
+    'Metaverse': 'Consumer',
+    'Music': 'Consumer',
+    'Collectibles': 'Consumer',
+
+    // Payments & Transfers
+    'Payments': 'Payments',
+    'Payment Processor': 'Payments',
+    'Remittance': 'Payments',
+
+    // Launchpad & Fundraising
+    'Launchpad': 'Launchpad',
+    'IDO': 'Launchpad',
+    'Crowdfunding': 'Launchpad',
+
+    // AI & DePIN
+    'AI Agents': 'AI & DePIN',
+    'AI': 'AI & DePIN',
+    'DePIN': 'AI & DePIN',
+    'Compute': 'AI & DePIN',
+    'GPU': 'AI & DePIN',
   }
   return mapping[category] || 'Other'
 }
