@@ -490,7 +490,7 @@ export default function DerivativesTab() {
               ...defaultLayout,
               height: 380,
               yaxis: { ...defaultLayout.yaxis, title: 'Daily Revenue (USD)' },
-              xaxis: { ...defaultLayout.xaxis, tickangle: -30 },
+              xaxis: { ...defaultLayout.xaxis, tickangle: -30, type: 'category' },
             }}
             config={defaultConfig}
             className="w-full"
@@ -520,7 +520,7 @@ export default function DerivativesTab() {
               ...defaultLayout,
               height: 360,
               yaxis: { ...defaultLayout.yaxis, title: 'Daily Volume (USD)' },
-              xaxis: { ...defaultLayout.xaxis, tickangle: -30 },
+              xaxis: { ...defaultLayout.xaxis, tickangle: -30, type: 'category' },
             }}
             config={defaultConfig}
             className="w-full"

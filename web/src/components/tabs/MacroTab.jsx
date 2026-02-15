@@ -98,23 +98,27 @@ function classifyMacroRegime(treasuryYield, dxyLevel, btcChange30d, defiSpread, 
   return { regime: 'Transition', color: colors.warning }
 }
 
-// Parse Yahoo historical data
+// Parse Yahoo historical data (v8 chart format from our proxy)
 function parseYahooHistorical(data) {
   if (!data) return []
-  const historical = data.historical || data.quotes || data.chart?.result?.[0]?.indicators?.quote?.[0] || []
-  const timestamps = data.chart?.result?.[0]?.timestamp || []
-  
-  if (timestamps.length > 0 && historical.close) {
-    return timestamps.map((ts, i) => ({
+  // Our proxy returns { quotes: [{ date, close, ... }], meta }
+  const quotes = data.quotes || data.historical || []
+  if (Array.isArray(quotes) && quotes.length > 0) {
+    return quotes.map(d => ({
+      date: typeof d.date === 'string' ? d.date.split('T')[0] : null,
+      value: d.close ?? d.adjclose ?? d.price ?? null,
+    })).filter(d => d.value != null && d.date)
+  }
+  // Fallback: raw v8 chart format (if proxy sends raw data)
+  const result = data.chart?.result?.[0]
+  if (result?.timestamp?.length) {
+    const closes = result.indicators?.quote?.[0]?.close || []
+    return result.timestamp.map((ts, i) => ({
       date: new Date(ts * 1000).toISOString().split('T')[0],
-      value: historical.close[i],
+      value: closes[i],
     })).filter(d => d.value != null)
   }
-  
-  return historical.map(d => ({
-    date: d.date || new Date((d.timestamp || d.t) * 1000).toISOString().split('T')[0],
-    value: d.close ?? d.adjclose ?? d.price ?? d.c,
-  })).filter(d => d.value != null && d.date)
+  return []
 }
 
 // Parse CoinGecko chart data

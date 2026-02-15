@@ -195,7 +195,7 @@ export default function ValuationsTab() {
             marker: { color: top30.map((_, i) => colors.palette[i % colors.palette.length]), line: { width: 0 } },
             hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>',
           }]}
-          layout={{ ...defaultLayout, height: 420, xaxis: { ...defaultLayout.xaxis, tickangle: -45 }, yaxis: { ...defaultLayout.yaxis, title: 'Fees (USD)' } }}
+          layout={{ ...defaultLayout, height: 420, xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' }, yaxis: { ...defaultLayout.yaxis, title: 'Fees (USD)' } }}
           config={defaultConfig} className="w-full"
         />
       </ChartCard>

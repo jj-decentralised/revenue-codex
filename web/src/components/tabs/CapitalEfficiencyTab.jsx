@@ -397,7 +397,7 @@ export default function CapitalEfficiencyTab() {
             ...defaultLayout,
             height: 420,
             barmode: 'group',
-            xaxis: { ...defaultLayout.xaxis, tickangle: -25 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -25, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Capital Efficiency (%)' },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.1 },
           }}

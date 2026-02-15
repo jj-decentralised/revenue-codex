@@ -226,7 +226,7 @@ export default function MarketStructureTab() {
           layout={{
             ...defaultLayout,
             height: 400,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
             annotations: [{
               x: 0.99, y: 0.98, xref: 'paper', yref: 'paper', showarrow: false,
@@ -254,7 +254,7 @@ export default function MarketStructureTab() {
           layout={{
             ...defaultLayout,
             height: 380,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
           }}
           config={defaultConfig}
@@ -375,7 +375,7 @@ export default function MarketStructureTab() {
               layout={{
                 ...defaultLayout,
                 height: 300,
-                xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+                xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
                 yaxis: { ...defaultLayout.yaxis, title: 'Market Share (%)' },
                 annotations: [{
                   x: 0.5, y: 1.1, xref: 'paper', yref: 'paper',
@@ -407,7 +407,7 @@ export default function MarketStructureTab() {
           layout={{
             ...defaultLayout,
             height: 380,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
           }}
           config={defaultConfig}
@@ -431,7 +431,7 @@ export default function MarketStructureTab() {
             layout={{
               ...defaultLayout,
               height: 380,
-              xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+              xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
               yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
             }}
             config={defaultConfig}
@@ -456,7 +456,7 @@ export default function MarketStructureTab() {
             layout={{
               ...defaultLayout,
               height: 380,
-              xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+              xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
               yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
             }}
             config={defaultConfig}
@@ -491,7 +491,7 @@ export default function MarketStructureTab() {
               ...defaultLayout,
               height: 380,
               barmode: 'group',
-              xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+              xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
               yaxis: { ...defaultLayout.yaxis, title: 'Volume (USD)' },
               legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
             }}

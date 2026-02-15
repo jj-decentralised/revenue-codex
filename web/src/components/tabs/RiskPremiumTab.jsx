@@ -374,7 +374,7 @@ export default function RiskPremiumTab() {
           layout={{
             ...defaultLayout,
             height: 450,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Risk Premium (%)', range: [-5, 30] },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.1 },
             shapes: [
@@ -431,7 +431,7 @@ export default function RiskPremiumTab() {
           layout={{
             ...defaultLayout,
             height: 420,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -30 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -30, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Risk Premium (%)', range: [-5, 40] },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.1 },
           }}

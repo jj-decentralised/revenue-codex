@@ -760,7 +760,7 @@ export default function OnChainEconomyTab() {
           layout={{
             ...defaultLayout,
             height: 400,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -30 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -30, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'GDP (USD)' },
             annotations: [
               {

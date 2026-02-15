@@ -108,7 +108,7 @@ export default function DeveloperActivityTab() {
             marker: { color: byCommits.map((_, i) => colors.palette[i % colors.palette.length]), line: { width: 0 } },
             hovertemplate: '%{x}<br>%{y:,.0f} commits<extra></extra>',
           }]}
-          layout={{ ...defaultLayout, height: 400, xaxis: { ...defaultLayout.xaxis, tickangle: -45 }, yaxis: { ...defaultLayout.yaxis, title: 'Commits (4 weeks)' } }}
+          layout={{ ...defaultLayout, height: 400, xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' }, yaxis: { ...defaultLayout.yaxis, title: 'Commits (4 weeks)' } }}
           config={defaultConfig}
           className="w-full"
         />
@@ -172,7 +172,7 @@ export default function DeveloperActivityTab() {
             ...defaultLayout,
             height: 400,
             barmode: 'group',
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Followers / Subscribers' },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
           }}
@@ -200,7 +200,7 @@ export default function DeveloperActivityTab() {
           layout={{
             ...defaultLayout,
             height: 350,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Issue Close Rate (%)', range: [0, 100] },
             shapes: [{
               type: 'line',

@@ -157,7 +157,7 @@ export default function SentimentTab() {
           layout={{
             ...defaultLayout,
             height: 450,
-            xaxis: { ...defaultLayout.xaxis, title: 'Fear & Greed Index', range: [0, 100] },
+            xaxis: { ...defaultLayout.xaxis, title: 'Fear & Greed Index', range: [0, 100], type: 'linear' },
             yaxis: { ...defaultLayout.yaxis, title: 'Daily Revenue (USD)' },
           }}
           config={defaultConfig}

@@ -421,7 +421,7 @@ export default function MEVStudyTab() {
             ...defaultLayout,
             height: 380,
             yaxis: { ...defaultLayout.yaxis, title: 'Coefficient of Variation' },
-            xaxis: { ...defaultLayout.xaxis, tickangle: -30 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -30, type: 'category' },
             shapes: [
               { type: 'line', x0: -0.5, x1: sectorVolatility.length - 0.5, y0: 0.3, y1: 0.3, line: { color: colors.success, dash: 'dash', width: 1 } },
               { type: 'line', x0: -0.5, x1: sectorVolatility.length - 0.5, y0: 0.5, y1: 0.5, line: { color: colors.warning, dash: 'dash', width: 1 } },
@@ -458,7 +458,7 @@ export default function MEVStudyTab() {
             ...defaultLayout,
             height: 380,
             yaxis: { ...defaultLayout.yaxis, title: 'Liquidation Volume (USD)' },
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
           }}
           config={defaultConfig}
           className="w-full"
@@ -491,7 +491,7 @@ export default function MEVStudyTab() {
             ...defaultLayout,
             height: 380,
             yaxis: { ...defaultLayout.yaxis, title: 'Absolute Funding Rate (%)' },
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             shapes: [
               { type: 'line', x0: -0.5, x1: fundingImpactData.length - 0.5, y0: 0.01, y1: 0.01, line: { color: colors.success, dash: 'dash', width: 1 } },
               { type: 'line', x0: -0.5, x1: fundingImpactData.length - 0.5, y0: 0.05, y1: 0.05, line: { color: colors.danger, dash: 'dash', width: 1 } },
@@ -528,7 +528,7 @@ export default function MEVStudyTab() {
             ...defaultLayout,
             height: 450,
             yaxis: { ...defaultLayout.yaxis, title: 'Durability Score (Mean/CV)' },
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
           }}
           config={defaultConfig}
           className="w-full"
@@ -616,7 +616,7 @@ export default function MEVStudyTab() {
                 zerolinecolor: colors.slate,
                 zerolinewidth: 2,
               },
-              xaxis: { ...defaultLayout.xaxis, tickangle: -30 },
+              xaxis: { ...defaultLayout.xaxis, tickangle: -30, type: 'category' },
               shapes: [
                 { type: 'line', x0: -0.5, x1: autocorrelationData.length - 0.5, y0: 0.5, y1: 0.5, line: { color: colors.success, dash: 'dash', width: 1 } },
               ],

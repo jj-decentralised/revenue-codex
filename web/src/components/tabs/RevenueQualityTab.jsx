@@ -152,7 +152,7 @@ export default function RevenueQualityTab() {
             ]}
             layout={{
               ...defaultLayout, height: 480, barmode: 'group',
-              xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+              xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
               yaxis: { ...defaultLayout.yaxis, title: 'USD (daily)' },
               legend: { ...defaultLayout.legend, orientation: 'h', y: -0.2 },
             }}
@@ -172,7 +172,7 @@ export default function RevenueQualityTab() {
             }]}
             layout={{
               ...defaultLayout, height: 350, bargap: 0.05,
-              xaxis: { ...defaultLayout.xaxis, title: 'Take Rate (%)', range: [0, 100] },
+              xaxis: { ...defaultLayout.xaxis, title: 'Take Rate (%)', range: [0, 100], type: 'linear' },
               yaxis: { ...defaultLayout.yaxis, title: 'Number of Protocols' },
               shapes: [{ type: 'line', x0: 50, x1: 50, y0: 0, y1: 1, yref: 'paper', line: { color: '#9CA3AF', dash: 'dash', width: 2 } }],
             }}
@@ -190,7 +190,7 @@ export default function RevenueQualityTab() {
             marker: { color: sortedSectors.map((_, i) => colors.palette[i % colors.palette.length]) },
             hovertemplate: '%{x}<br>%{y:.1f}%<extra></extra>',
           }]}
-          layout={{ ...defaultLayout, height: 350, yaxis: { ...defaultLayout.yaxis, title: 'Market Share (%)' } }}
+          layout={{ ...defaultLayout, height: 350, xaxis: { ...defaultLayout.xaxis, type: 'category' }, yaxis: { ...defaultLayout.yaxis, title: 'Market Share (%)' } }}
           config={defaultConfig} className="w-full"
         />
       </ChartCard>
@@ -218,7 +218,7 @@ export default function RevenueQualityTab() {
             marker: { color: top10Stablecoins.map((_, i) => colors.palette[i % colors.palette.length]) },
             hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>',
           }]}
-          layout={{ ...defaultLayout, height: 380, xaxis: { ...defaultLayout.xaxis, tickangle: -30 }, yaxis: { ...defaultLayout.yaxis, title: 'Market Cap (USD)' } }}
+          layout={{ ...defaultLayout, height: 380, xaxis: { ...defaultLayout.xaxis, tickangle: -30, type: 'category' }, yaxis: { ...defaultLayout.yaxis, title: 'Market Cap (USD)' } }}
           config={defaultConfig} className="w-full"
         />
       </ChartCard>

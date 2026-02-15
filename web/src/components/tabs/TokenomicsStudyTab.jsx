@@ -387,7 +387,7 @@ export default function TokenomicsStudyTab() {
           layout={{
             ...defaultLayout,
             height: 400,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -30 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -30, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Real Yield (Staking APY - Inflation %)', zeroline: true, zerolinecolor: '#111827', zerolinewidth: 2 },
             shapes: [
               { type: 'line', x0: -0.5, x1: stakingTokens.length - 0.5, y0: 0, y1: 0, line: { color: '#111827', width: 2 } },

@@ -597,7 +597,7 @@ export default function PowerLawTab() {
           layout={{
             ...defaultLayout,
             height: 400,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Exponent (α)' },
             annotations: [{
               x: 0.5, y: 1.05, xref: 'paper', yref: 'paper', showarrow: false,

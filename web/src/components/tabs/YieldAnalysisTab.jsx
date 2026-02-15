@@ -231,7 +231,7 @@ export default function YieldAnalysisTab() {
           layout={{
             ...defaultLayout,
             height: 450,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'APY (%)', range: [0, 50] },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.1 },
             showlegend: true,
@@ -352,7 +352,7 @@ export default function YieldAnalysisTab() {
           layout={{
             ...defaultLayout,
             height: 450,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'APY (%)' },
           }}
           config={defaultConfig}

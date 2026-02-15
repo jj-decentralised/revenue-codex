@@ -135,7 +135,7 @@ export default function FutureLeadersTab() {
           layout={{
             ...defaultLayout,
             height: 400,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'TVL (USD)' },
           }}
           config={defaultConfig}
@@ -188,7 +188,7 @@ export default function FutureLeadersTab() {
           layout={{
             ...defaultLayout,
             height: 400,
-            xaxis: { ...defaultLayout.xaxis, tickangle: -45 },
+            xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Daily Revenue (USD)' },
             barmode: 'group',
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
