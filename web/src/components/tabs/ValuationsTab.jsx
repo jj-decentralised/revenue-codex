@@ -43,6 +43,7 @@ export default function ValuationsTab() {
     cgMarkets.forEach(m => {
       if (m.id) mcapLookup[m.id.toLowerCase()] = m
       if (m.symbol) mcapLookup[m.symbol.toLowerCase()] = m
+      if (m.name) mcapLookup[m.name.toLowerCase()] = m
     })
 
     // DeFiLlama protocols (TVL, category, mcap)
@@ -60,7 +61,7 @@ export default function ValuationsTab() {
         const slug = (p.slug || '').toLowerCase()
         const name = (p.name || '').toLowerCase()
         const llama = llamaLookup[slug] || llamaLookup[name]
-        const cg = mcapLookup[slug] || mcapLookup[name] || mcapLookup[(llama?.symbol || '').toLowerCase()]
+        const cg = mcapLookup[slug] || mcapLookup[name] || mcapLookup[(llama?.gecko_id || '').toLowerCase()] || mcapLookup[(llama?.symbol || '').toLowerCase()]
         const rev = revLookup[slug]
 
         const mcap = cg?.market_cap || llama?.mcap || 0
@@ -150,7 +151,7 @@ export default function ValuationsTab() {
   const top30 = topProtocols.slice(0, 30)
 
   // Scatter: ALL protocols, filtered by sector
-  let scatterProtocols = mergedProtocols.filter(p => p.mcap > 0 && p.annualizedFees > 10000)
+  let scatterProtocols = mergedProtocols.filter(p => p.mcap > 0 && p.annualizedFees > 0)
   if (selectedSector !== 'All') scatterProtocols = scatterProtocols.filter(p => p.sector === selectedSector)
   const scatterCats = [...new Set(scatterProtocols.map(p => p.sector))]
   const catColors = {}
@@ -268,8 +269,8 @@ export default function ValuationsTab() {
           ]}
           layout={{
             ...defaultLayout, height: 500,
-            xaxis: { ...defaultLayout.xaxis, title: `Fee Change % (${corrPeriod})`, zeroline: true, zerolinecolor: '#D1D5DB' },
-            yaxis: { ...defaultLayout.yaxis, title: `Price Change % (${corrPeriod})`, zeroline: true, zerolinecolor: '#D1D5DB' },
+            xaxis: { ...defaultLayout.xaxis, title: `Fee Change % (${corrPeriod})`, type: 'linear', zeroline: true, zerolinecolor: '#D1D5DB' },
+            yaxis: { ...defaultLayout.yaxis, title: `Price Change % (${corrPeriod})`, type: 'linear', zeroline: true, zerolinecolor: '#D1D5DB' },
             legend: { ...defaultLayout.legend, orientation: 'h', y: -0.15 },
             shapes: [
               { type: 'line', x0: 0, x1: 0, y0: 0, y1: 1, yref: 'paper', line: { color: '#E5E7EB', dash: 'dot', width: 1 } },
