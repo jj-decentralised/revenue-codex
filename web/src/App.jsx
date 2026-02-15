@@ -17,6 +17,7 @@ const MacroTab = lazy(() => import('./components/tabs/MacroTab'))
 const OnChainEconomyTab = lazy(() => import('./components/tabs/OnChainEconomyTab'))
 const DeveloperActivityTab = lazy(() => import('./components/tabs/DeveloperActivityTab'))
 const OnChainMetricsTab = lazy(() => import('./components/tabs/OnChainMetricsTab'))
+const PowerLawTab = lazy(() => import('./components/tabs/PowerLawTab'))
 
 const TABS = [
   // Group 1: Revenue Fundamentals
@@ -36,6 +37,8 @@ const TABS = [
   { id: 'onchain', label: 'On-Chain Economy', group: 'Macro & On-Chain' },
   { id: 'developer', label: 'Developer Activity', group: 'Macro & On-Chain' },
   { id: 'onchainmetrics', label: 'On-Chain Metrics', group: 'Macro & On-Chain' },
+  // Group 5: Academic Studies
+  { id: 'powerlaw', label: 'Power Laws', group: 'Academic Studies' },
 ]
 
 const TAB_COMPONENTS = {
@@ -52,6 +55,7 @@ const TAB_COMPONENTS = {
   onchain: OnChainEconomyTab,
   developer: DeveloperActivityTab,
   onchainmetrics: OnChainMetricsTab,
+  powerlaw: PowerLawTab,
 }
 
 export default function App() {
