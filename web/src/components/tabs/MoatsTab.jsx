@@ -136,20 +136,6 @@ export default function MoatsTab() {
       })
       .sort((a, b) => b.moatScore - a.moatScore)
 
-    // Token Terminal data for earnings layer
-    const ttRevenue = data?.ttFinancials?.revenue?.data || []
-    const ttEarnings = data?.ttFinancials?.earnings?.data || []
-    const ttLookup = {}
-    if (Array.isArray(ttRevenue)) ttRevenue.forEach(d => { if (d.project_id) ttLookup[d.project_id] = { ...ttLookup[d.project_id], ttRevenue: d.revenue } })
-    if (Array.isArray(ttEarnings)) ttEarnings.forEach(d => { if (d.project_id) ttLookup[d.project_id] = { ...ttLookup[d.project_id], ttEarnings: d.earnings } })
-
-    // Enrich top scored with TT data
-    scored.forEach(p => {
-      const tt = ttLookup[p.slug] || ttLookup[(p.name || '').toLowerCase()]
-      p.ttRevenue = tt?.ttRevenue || 0
-      p.ttEarnings = tt?.ttEarnings || 0
-      p.earningsMargin = p.ttRevenue > 0 ? (p.ttEarnings / p.ttRevenue) * 100 : null
-    })
 
     const top50 = scored.slice(0, 50)
     const ratingDist = { 'Strong Moat': 0, 'Moderate Moat': 0, 'Weak Moat': 0, 'No Moat': 0 }

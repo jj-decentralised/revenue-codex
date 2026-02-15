@@ -23,7 +23,7 @@ export default function SentimentTab() {
   if (loading) return <LoadingSpinner message="Loading sentiment data..." />
   if (error) return <div className="text-center py-20 text-(--color-danger)">Error: {error}</div>
 
-  const totalRevenue24h = data?.fees?.totalRevenue24h || 0
+  const totalRevenue24h = data?.fees?.total24h || 0
   const fearGreedData = (data?.fearGreed || []).reverse() // chronological order
 
   // Fear & Greed time series
