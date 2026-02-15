@@ -6,23 +6,31 @@ import SentimentTab from './components/tabs/SentimentTab'
 import RevenueQualityTab from './components/tabs/RevenueQualityTab'
 import MoatsTab from './components/tabs/MoatsTab'
 import FutureLeadersTab from './components/tabs/FutureLeadersTab'
+import CapitalEfficiencyTab from './components/tabs/CapitalEfficiencyTab'
 import MarketStructureTab from './components/tabs/MarketStructureTab'
+import DerivativesTab from './components/tabs/DerivativesTab'
+import YieldAnalysisTab from './components/tabs/YieldAnalysisTab'
 import MacroTab from './components/tabs/MacroTab'
 import OnChainEconomyTab from './components/tabs/OnChainEconomyTab'
-import YieldAnalysisTab from './components/tabs/YieldAnalysisTab'
 import DeveloperActivityTab from './components/tabs/DeveloperActivityTab'
 
 const TABS = [
-  { id: 'valuations', label: 'Valuations & Multiples' },
-  { id: 'sentiment', label: 'Sentiment Disconnect' },
-  { id: 'quality', label: 'Revenue Quality' },
-  { id: 'moats', label: 'Moats' },
-  { id: 'future', label: 'Future Leaders' },
-  { id: 'structure', label: 'Market Structure' },
-  { id: 'macro', label: 'Macro Correlations' },
-  { id: 'economy', label: 'On-Chain Economy' },
-  { id: 'yield', label: 'Yield Analysis' },
-  { id: 'developer', label: 'Developer Activity' },
+  // Group 1: Revenue Fundamentals
+  { id: 'valuations', label: 'Valuations & Multiples', group: 'Revenue Fundamentals' },
+  { id: 'sentiment', label: 'Sentiment Disconnect', group: 'Revenue Fundamentals' },
+  { id: 'quality', label: 'Revenue Quality', group: 'Revenue Fundamentals' },
+  // Group 2: Moats & Strategy
+  { id: 'moats', label: 'Moats', group: 'Moats & Strategy' },
+  { id: 'future', label: 'Future Leaders', group: 'Moats & Strategy' },
+  { id: 'efficiency', label: 'Capital Efficiency', group: 'Moats & Strategy' },
+  // Group 3: Market Intelligence
+  { id: 'structure', label: 'Market Structure', group: 'Market Intelligence' },
+  { id: 'derivatives', label: 'Derivatives Intelligence', group: 'Market Intelligence' },
+  { id: 'yield', label: 'Yield Analysis', group: 'Market Intelligence' },
+  // Group 4: Macro & On-Chain
+  { id: 'macro', label: 'Macro Correlations', group: 'Macro & On-Chain' },
+  { id: 'onchain', label: 'On-Chain Economy', group: 'Macro & On-Chain' },
+  { id: 'developer', label: 'Developer Activity', group: 'Macro & On-Chain' },
 ]
 
 const TAB_COMPONENTS = {
@@ -31,10 +39,12 @@ const TAB_COMPONENTS = {
   quality: RevenueQualityTab,
   moats: MoatsTab,
   future: FutureLeadersTab,
+  efficiency: CapitalEfficiencyTab,
   structure: MarketStructureTab,
-  macro: MacroTab,
-  economy: OnChainEconomyTab,
+  derivatives: DerivativesTab,
   yield: YieldAnalysisTab,
+  macro: MacroTab,
+  onchain: OnChainEconomyTab,
   developer: DeveloperActivityTab,
 }
 
