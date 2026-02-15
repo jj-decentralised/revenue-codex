@@ -12,7 +12,7 @@ export default function Layout({ children }) {
             </p>
           </div>
           <div className="text-xs text-(--color-text-secondary)">
-            Data: Token Terminal · DeFiLlama · Alternative.me
+            Data: DeFiLlama · CoinGecko · Coinglass
           </div>
         </div>
       </header>
