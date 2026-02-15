@@ -89,3 +89,13 @@ export const developerActivityNarrative = {
     'Community metrics (Twitter followers, Reddit subscribers) represent social capital that translates into user acquisition potential. Projects with strong developer activity AND community engagement exhibit the most durable competitive moats.',
   ],
 }
+
+export const riskPremiumNarrative = {
+  title: 'The Crypto Risk Premium: A Cross-Sectional Study',
+  paragraphs: [
+    'The crypto risk premium — the spread between DeFi yields and the risk-free rate — compensates investors for smart contract vulnerability, oracle manipulation, bridge risk, and regulatory uncertainty. Our cross-sectional analysis of {totalPools} stablecoin pools with TVL >$100K reveals a median risk premium of {medianPremium}bps above the 13-week Treasury rate.',
+    'This premium exhibits a clear scale effect: pools with >$100M TVL earn {largePoolPremium} average premium vs {smallPoolPremium} for <$1M pools, consistent with information-efficient markets where large, battle-tested protocols trade at tighter spreads. Capital flows rationally to where risk-adjusted returns are most attractive.',
+    'The efficient frontier analysis reveals which protocols offer the best risk-adjusted yields — high APY with low volatility. The DeFi Sharpe Ratio proxy (return over spread) identifies protocols that consistently deliver premium returns without excessive variance, the holy grail for yield-seeking capital.',
+    'Chain-level analysis shows significant dispersion in risk premiums. Newer chains and L2s command higher premiums, reflecting the market\'s rational pricing of bridge risk, ecosystem maturity, and liquidity depth. This premium compression as chains mature mirrors the corporate bond market\'s treatment of emerging vs established issuers.',
+  ],
+}

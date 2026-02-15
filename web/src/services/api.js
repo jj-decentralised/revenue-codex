@@ -436,3 +436,23 @@ export async function fetchRaisesAndHacks() {
     hacks: hacks.status === 'fulfilled' ? hacks.value : null,
   }
 }
+
+export async function fetchRiskPremiumData() {
+  const [pools, treasury, fees] = await Promise.allSettled([
+    fetchYieldPools(),
+    fetchYahooQuote('^IRX'),
+    fetchFeesOverview(),
+  ])
+
+  // Treasury yield from Yahoo Finance ^IRX (13-week T-Bill rate)
+  let treasuryYield = 4.5 // fallback
+  if (treasury.status === 'fulfilled' && treasury.value?.regularMarketPrice) {
+    treasuryYield = treasury.value.regularMarketPrice
+  }
+
+  return {
+    pools: pools.status === 'fulfilled' ? pools.value : [],
+    treasuryYield,
+    fees: fees.status === 'fulfilled' ? fees.value : null,
+  }
+}

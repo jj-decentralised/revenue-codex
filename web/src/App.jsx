@@ -18,6 +18,7 @@ const OnChainEconomyTab = lazy(() => import('./components/tabs/OnChainEconomyTab
 const DeveloperActivityTab = lazy(() => import('./components/tabs/DeveloperActivityTab'))
 const OnChainMetricsTab = lazy(() => import('./components/tabs/OnChainMetricsTab'))
 const PowerLawTab = lazy(() => import('./components/tabs/PowerLawTab'))
+const RiskPremiumTab = lazy(() => import('./components/tabs/RiskPremiumTab'))
 
 const TABS = [
   // Group 1: Revenue Fundamentals
@@ -32,6 +33,7 @@ const TABS = [
   { id: 'structure', label: 'Market Structure', group: 'Market Intelligence' },
   { id: 'derivatives', label: 'Derivatives Intelligence', group: 'Market Intelligence' },
   { id: 'yield', label: 'Yield Analysis', group: 'Market Intelligence' },
+  { id: 'riskpremium', label: 'Risk Premium Study', group: 'Market Intelligence' },
   // Group 4: Macro & On-Chain
   { id: 'macro', label: 'Macro Correlations', group: 'Macro & On-Chain' },
   { id: 'onchain', label: 'On-Chain Economy', group: 'Macro & On-Chain' },
@@ -51,6 +53,7 @@ const TAB_COMPONENTS = {
   structure: MarketStructureTab,
   derivatives: DerivativesTab,
   yield: YieldAnalysisTab,
+  riskpremium: RiskPremiumTab,
   macro: MacroTab,
   onchain: OnChainEconomyTab,
   developer: DeveloperActivityTab,
