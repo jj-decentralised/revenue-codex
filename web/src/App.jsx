@@ -7,6 +7,7 @@ import RevenueQualityTab from './components/tabs/RevenueQualityTab'
 import MoatsTab from './components/tabs/MoatsTab'
 import FutureLeadersTab from './components/tabs/FutureLeadersTab'
 import MarketStructureTab from './components/tabs/MarketStructureTab'
+import MacroTab from './components/tabs/MacroTab'
 
 const TABS = [
   { id: 'valuations', label: 'Valuations & Multiples' },
@@ -15,6 +16,7 @@ const TABS = [
   { id: 'moats', label: 'Moats' },
   { id: 'future', label: 'Future Leaders' },
   { id: 'structure', label: 'Market Structure' },
+  { id: 'macro', label: 'Macro Correlations' },
 ]
 
 const TAB_COMPONENTS = {
@@ -24,6 +26,7 @@ const TAB_COMPONENTS = {
   moats: MoatsTab,
   future: FutureLeadersTab,
   structure: MarketStructureTab,
+  macro: MacroTab,
 }
 
 export default function App() {
