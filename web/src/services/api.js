@@ -3,6 +3,7 @@
 // ============================================================
 const LLAMA_BASE = 'https://api.llama.fi'
 const LLAMA_STABLES = 'https://stablecoins.llama.fi'
+const LLAMA_BRIDGES = 'https://bridges.llama.fi'
 
 export async function fetchFeesOverview() {
   const res = await fetch(`${LLAMA_BASE}/overview/fees?excludeTotalDataChartBreakdown=false`)
@@ -44,6 +45,136 @@ export async function fetchHistoricalChainTvl() {
   const res = await fetch(`${LLAMA_BASE}/v2/historicalChainTvl`)
   if (!res.ok) throw new Error(`Historical TVL: ${res.status}`)
   return res.json()
+}
+
+export async function fetchChainTvl(chain) {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/v2/historicalChainTvl/${chain}`)
+    if (!res.ok) throw new Error(`Chain TVL: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchDexOverview() {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/overview/dexs`)
+    if (!res.ok) throw new Error(`DEX overview: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchDexByChain(chain) {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/overview/dexs/${chain}`)
+    if (!res.ok) throw new Error(`DEX by chain: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchDexProtocol(protocol) {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/summary/dexs/${protocol}`)
+    if (!res.ok) throw new Error(`DEX protocol: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchOptionsOverview() {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/overview/options`)
+    if (!res.ok) throw new Error(`Options overview: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchDerivativesOverview() {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/overview/derivatives`)
+    if (!res.ok) throw new Error(`Derivatives overview: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchBridges() {
+  try {
+    const res = await fetch(`${LLAMA_BRIDGES}/bridges`)
+    if (!res.ok) throw new Error(`Bridges: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchBridgeVolume(id) {
+  try {
+    const res = await fetch(`${LLAMA_BRIDGES}/bridge/${id}`)
+    if (!res.ok) throw new Error(`Bridge volume: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchRaises() {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/raises`)
+    if (!res.ok) throw new Error(`Raises: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchHacks() {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/hacks`)
+    if (!res.ok) throw new Error(`Hacks: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchFeesByChain(chain) {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/overview/fees/${chain}`)
+    if (!res.ok) throw new Error(`Fees by chain: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchTreasury(protocol) {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/treasury/${protocol}`)
+    if (!res.ok) throw new Error(`Treasury: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchProtocolUsers(protocol) {
+  try {
+    const res = await fetch(`${LLAMA_BASE}/userData/users/${protocol}`)
+    if (!res.ok) throw new Error(`Protocol users: ${res.status}`)
+    return res.json()
+  } catch {
+    return null
+  }
 }
 
 // ============================================================
@@ -223,5 +354,85 @@ export async function fetchDeveloperActivityData() {
   return {
     coins,
     fees: fees.status === 'fulfilled' ? fees.value : null,
+  }
+}
+
+export async function fetchCapitalEfficiencyData() {
+  const [protocols, fees] = await Promise.allSettled([
+    fetchAllProtocols(),
+    fetchFeesOverview(),
+  ])
+
+  return {
+    protocols: protocols.status === 'fulfilled' ? protocols.value : null,
+    fees: fees.status === 'fulfilled' ? fees.value : null,
+  }
+}
+
+export async function fetchMarketStructureData() {
+  const [dexOverview, fees] = await Promise.allSettled([
+    fetchDexOverview(),
+    fetchFeesOverview(),
+  ])
+
+  return {
+    dexOverview: dexOverview.status === 'fulfilled' ? dexOverview.value : null,
+    fees: fees.status === 'fulfilled' ? fees.value : null,
+  }
+}
+
+export async function fetchOnChainEconomyData() {
+  const [historicalTvl, fees, stablecoins, stablecoinCharts, dexOverview] = await Promise.allSettled([
+    fetchHistoricalChainTvl(),
+    fetchFeesOverview(),
+    fetchStablecoins(),
+    fetchStablecoinCharts(),
+    fetchDexOverview(),
+  ])
+
+  return {
+    historicalTvl: historicalTvl.status === 'fulfilled' ? historicalTvl.value : null,
+    fees: fees.status === 'fulfilled' ? fees.value : null,
+    stablecoins: stablecoins.status === 'fulfilled' ? stablecoins.value : null,
+    stablecoinCharts: stablecoinCharts.status === 'fulfilled' ? stablecoinCharts.value : null,
+    dexOverview: dexOverview.status === 'fulfilled' ? dexOverview.value : null,
+  }
+}
+
+export async function fetchMacroData() {
+  const [fearGreed, fees] = await Promise.allSettled([
+    fetchFearGreedIndex(365),
+    fetchFeesOverview(),
+  ])
+
+  return {
+    fearGreed: fearGreed.status === 'fulfilled' ? fearGreed.value : null,
+    fees: fees.status === 'fulfilled' ? fees.value : null,
+  }
+}
+
+export async function fetchDerivativesData() {
+  const [derivatives, options, fees] = await Promise.allSettled([
+    fetchDerivativesOverview(),
+    fetchOptionsOverview(),
+    fetchFeesOverview(),
+  ])
+
+  return {
+    derivatives: derivatives.status === 'fulfilled' ? derivatives.value : null,
+    options: options.status === 'fulfilled' ? options.value : null,
+    fees: fees.status === 'fulfilled' ? fees.value : null,
+  }
+}
+
+export async function fetchRaisesAndHacks() {
+  const [raises, hacks] = await Promise.allSettled([
+    fetchRaises(),
+    fetchHacks(),
+  ])
+
+  return {
+    raises: raises.status === 'fulfilled' ? raises.value : null,
+    hacks: hacks.status === 'fulfilled' ? hacks.value : null,
   }
 }
