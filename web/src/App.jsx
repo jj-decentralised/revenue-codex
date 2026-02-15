@@ -34,21 +34,21 @@ const TABS = [
   { id: 'moats', label: 'Moats', group: 'Moats & Strategy' },
   { id: 'future', label: 'Future Leaders', group: 'Moats & Strategy' },
   { id: 'efficiency', label: 'Capital Efficiency', group: 'Moats & Strategy' },
-  { id: 'tokenomics', label: 'Tokenomics Study', group: 'Moats & Strategy' },
   // Group 3: Market Intelligence
   { id: 'structure', label: 'Market Structure', group: 'Market Intelligence' },
   { id: 'derivatives', label: 'Derivatives Intelligence', group: 'Market Intelligence' },
   { id: 'yield', label: 'Yield Analysis', group: 'Market Intelligence' },
-  { id: 'riskpremium', label: 'Risk Premium Study', group: 'Market Intelligence' },
   // Group 4: Macro & On-Chain
   { id: 'macro', label: 'Macro Correlations', group: 'Macro & On-Chain' },
   { id: 'onchain', label: 'On-Chain Economy', group: 'Macro & On-Chain' },
   { id: 'developer', label: 'Developer Activity', group: 'Macro & On-Chain' },
   { id: 'onchainmetrics', label: 'On-Chain Metrics', group: 'Macro & On-Chain' },
-  // Group 5: Academic Studies
-  { id: 'powerlaw', label: 'Power Laws', group: 'Academic Studies' },
-  { id: 'networkeffects', label: 'Network Effects', group: 'Academic Studies' },
-  { id: 'mevstudy', label: 'MEV & Extractable Revenue', group: 'Academic Studies' },
+  // Group 5: Research Studies
+  { id: 'powerlaw', label: 'Power Laws', group: 'Research Studies' },
+  { id: 'riskpremium', label: 'Risk Premium', group: 'Research Studies' },
+  { id: 'networkeffects', label: 'Network Effects', group: 'Research Studies' },
+  { id: 'mevstudy', label: 'MEV & Revenue', group: 'Research Studies' },
+  { id: 'tokenomics', label: 'Tokenomics', group: 'Research Studies' },
 ]
 
 const TAB_COMPONENTS = {
