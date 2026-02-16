@@ -498,6 +498,63 @@ export async function fetchCoinGeckoTrending() {
   return deduplicatedFetch('/api/coingecko?action=trending')
 }
 
+// Protocol slugs and CoinGecko IDs for bubble comparison
+const BUBBLE_PROTOCOLS = [
+  { slug: 'ethereum', geckoId: 'ethereum' },
+  { slug: 'solana', geckoId: 'solana' },
+  { slug: 'uniswap', geckoId: 'uniswap' },
+  { slug: 'aave', geckoId: 'aave' },
+  { slug: 'lido', geckoId: 'lido-dao' },
+  { slug: 'makerdao', geckoId: 'maker' },
+  { slug: 'tron', geckoId: 'tron' },
+  { slug: 'pancakeswap', geckoId: 'pancakeswap-token' },
+  { slug: 'curve-finance', geckoId: 'curve-dao-token' },
+  { slug: 'gmx', geckoId: 'gmx' },
+  { slug: 'jito', geckoId: 'jito-governance-token' },
+  { slug: 'raydium', geckoId: 'raydium' },
+  { slug: 'pendle', geckoId: 'pendle' },
+  { slug: 'compound', geckoId: 'compound-governance-token' },
+  { slug: 'dydx', geckoId: 'dydx-chain' },
+]
+
+export async function fetchBubbleComparisonData() {
+  // Phase 1: Bulk data (current snapshot)
+  const [fees, markets, protocols] = await Promise.allSettled([
+    fetchFeesOverview(),
+    fetchCoinGeckoMarketsAll(),
+    fetchAllProtocols(),
+  ])
+
+  // Phase 2: Historical data — batch in groups of 5 with delay
+  const BATCH = 5
+  const feeHistories = []
+  const mcapHistories = []
+
+  for (let i = 0; i < BUBBLE_PROTOCOLS.length; i += BATCH) {
+    const batch = BUBBLE_PROTOCOLS.slice(i, i + BATCH)
+    const [feesBatch, chartBatch] = await Promise.all([
+      Promise.allSettled(batch.map(p => fetchLlamaFeesProtocol(p.slug))),
+      Promise.allSettled(batch.map(p => fetchCoinChart(p.geckoId, 'max'))),
+    ])
+    batch.forEach((p, j) => {
+      feeHistories.push({ slug: p.slug, data: feesBatch[j].status === 'fulfilled' ? feesBatch[j].value : null })
+      mcapHistories.push({ geckoId: p.geckoId, slug: p.slug, data: chartBatch[j].status === 'fulfilled' ? chartBatch[j].value : null })
+    })
+    // Small delay between batches to respect rate limits
+    if (i + BATCH < BUBBLE_PROTOCOLS.length) {
+      await new Promise(r => setTimeout(r, 300))
+    }
+  }
+
+  return {
+    fees: fees.status === 'fulfilled' ? fees.value : null,
+    markets: markets.status === 'fulfilled' ? markets.value : null,
+    protocols: protocols.status === 'fulfilled' ? protocols.value : null,
+    feeHistories,
+    mcapHistories,
+  }
+}
+
 export async function fetchTokenomicsStudyData() {
   // Fetch broad CoinGecko data for ALL 1000 coins + DeFiLlama Pro emissions
   const [protocols, fees, markets, emissions, categories] = await Promise.allSettled([
