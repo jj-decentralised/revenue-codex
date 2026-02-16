@@ -28,6 +28,15 @@ export default function ValuationsTab() {
   const processed = useMemo(() => {
     if (!data) return null
 
+    // Fuzzy name normalization: strip common suffixes, special chars, whitespace
+    const normalizeName = (s) => {
+      if (!s) return ''
+      return s.toLowerCase()
+        .replace(/[-_.\s]+/g, '')  // strip separators
+        .replace(/(protocol|finance|network|dao|token|swap|exchange|defi|app|labs|xyz|io|org|v[0-9]+)$/g, '')
+        .replace(/[^a-z0-9]/g, '')  // strip remaining special chars
+    }
+
     const feesProtocols = data?.fees?.protocols || []
     const totalFees24h = data?.fees?.total24h || feesProtocols.reduce((s, p) => s + (p.total24h || 0), 0)
     const revenueProtocols = data?.feesRevenue?.protocols || []
@@ -37,21 +46,28 @@ export default function ValuationsTab() {
     const revLookup = {}
     revenueProtocols.forEach(p => { if (p.slug) revLookup[p.slug.toLowerCase()] = p })
 
-    // CoinGecko 1000 coins market cap lookup
+    // CoinGecko 1000 coins market cap lookup — keyed by id, symbol, name, AND normalized name
     const cgMarkets = Array.isArray(data?.markets) ? data.markets : []
     const mcapLookup = {}
+    const mcapFuzzy = {}
     cgMarkets.forEach(m => {
       if (m.id) mcapLookup[m.id.toLowerCase()] = m
       if (m.symbol) mcapLookup[m.symbol.toLowerCase()] = m
       if (m.name) mcapLookup[m.name.toLowerCase()] = m
+      // Fuzzy key
+      const nk = normalizeName(m.name || m.id)
+      if (nk) mcapFuzzy[nk] = m
     })
 
-    // DeFiLlama protocols (TVL, category, mcap)
+    // DeFiLlama protocols (TVL, category, mcap) — keyed by slug, name, AND normalized name
     const llamaProtocols = data?.protocols || []
     const llamaLookup = {}
+    const llamaFuzzy = {}
     llamaProtocols.forEach(p => {
       if (p.slug) llamaLookup[p.slug.toLowerCase()] = p
       if (p.name) llamaLookup[p.name.toLowerCase()] = p
+      const nk = normalizeName(p.name || p.slug)
+      if (nk) llamaFuzzy[nk] = p
     })
 
     // Merge: DeFiLlama fees + revenue + CoinGecko market data
@@ -60,11 +76,21 @@ export default function ValuationsTab() {
       .map(p => {
         const slug = (p.slug || '').toLowerCase()
         const name = (p.name || '').toLowerCase()
-        const llama = llamaLookup[slug] || llamaLookup[name]
-        const cg = mcapLookup[slug] || mcapLookup[name] || mcapLookup[(llama?.gecko_id || '').toLowerCase()] || mcapLookup[(llama?.symbol || '').toLowerCase()]
+        const norm = normalizeName(p.name || p.slug)
+
+        // Match DeFiLlama protocols: exact slug -> exact name -> fuzzy
+        const llama = llamaLookup[slug] || llamaLookup[name] || llamaFuzzy[norm]
+
+        // Match CoinGecko: slug -> name -> gecko_id -> symbol -> fuzzy
+        const cg = mcapLookup[slug] || mcapLookup[name]
+          || mcapLookup[(llama?.gecko_id || '').toLowerCase()]
+          || mcapLookup[(llama?.symbol || '').toLowerCase()]
+          || mcapFuzzy[norm]
+
         const rev = revLookup[slug]
 
-        const mcap = cg?.market_cap || llama?.mcap || 0
+        // Use DeFiLlama mcap as primary, CoinGecko as fallback
+        const mcap = llama?.mcap || cg?.market_cap || 0
         const tvl = llama?.tvl || 0
         const fees24h = p.total24h
         const revenue24h = rev?.total24h || 0

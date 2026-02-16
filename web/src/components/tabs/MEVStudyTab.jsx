@@ -564,7 +564,7 @@ export default function MEVStudyTab() {
           layout={{
             ...defaultLayout,
             height: 500,
-            xaxis: { ...defaultLayout.xaxis, title: 'Revenue Volatility (CV)', range: [0, Math.max(...quadrantData.map(d => d.cv)) * 1.1] },
+            xaxis: { ...defaultLayout.xaxis, title: 'Revenue Volatility (CV)', type: 'linear', range: [0, Math.max(...quadrantData.map(d => d.cv)) * 1.1] },
             yaxis: { ...defaultLayout.yaxis, title: 'Average Daily Revenue (USD)', type: 'log' },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
             shapes: [

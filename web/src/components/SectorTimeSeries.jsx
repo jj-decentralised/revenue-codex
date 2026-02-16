@@ -68,15 +68,29 @@ const COIN_SECTOR = {
 // Map DeFiLlama categories → market cap sector
 function mcapSector(category) {
   const map = {
-    'Dexes': 'DeFi', 'Lending': 'DeFi', 'CDP': 'DeFi',
+    'Dexs': 'DeFi', 'Dexes': 'DeFi', 'Lending': 'DeFi', 'CDP': 'DeFi',
+    'CDP Manager': 'DeFi', 'Uncollateralized Lending': 'DeFi', 'CeDeFi': 'DeFi',
     'Yield': 'DeFi', 'Yield Aggregator': 'DeFi', 'Derivatives': 'DeFi',
     'DEX Aggregator': 'DeFi', 'Options': 'DeFi', 'Farm': 'DeFi',
     'Prediction Market': 'DeFi', 'Liquid Staking': 'DeFi', 'Restaking': 'DeFi',
-    'Bridge': 'Infrastructure', 'Oracle': 'Infrastructure',
+    'Liquid Restaking': 'DeFi', 'Perpetuals': 'DeFi', 'Synthetics': 'DeFi',
+    'Interface': 'DeFi', 'Basis Trading': 'DeFi', 'Liquidity Manager': 'DeFi',
+    'Liquidity manager': 'DeFi', 'Insurance': 'DeFi', 'Indexes': 'DeFi',
+    'Flash Loans': 'DeFi', 'Leveraged Lending': 'DeFi',
+    'Bridge': 'Infrastructure', 'Bridge Aggregator': 'Infrastructure',
+    'Bridge Aggregators': 'Infrastructure', 'Cross Chain Bridge': 'Infrastructure',
+    'Oracle': 'Infrastructure', 'Indexer': 'Infrastructure',
     'Services': 'Infrastructure', 'Launchpad': 'Infrastructure',
+    'Data Availability': 'Infrastructure', 'Rollup': 'Infrastructure',
+    'Interoperability': 'Infrastructure', 'Developer Tools': 'Infrastructure',
     'Chain': 'Layer 1', 'CEX': 'Exchange Tokens',
     'Gaming': 'Gaming/NFT', 'NFT Marketplace': 'Gaming/NFT',
+    'NFT Lending': 'Gaming/NFT', 'Luck Games': 'Gaming/NFT',
     'RWA': 'RWA', 'Stablecoins': 'Stablecoins', 'Algo-Stables': 'Stablecoins',
+    'Reserve Currency': 'Stablecoins', 'Dual-Token Stablecoin': 'Stablecoins',
+    'Payments': 'Payments', 'Payment Processor': 'Payments',
+    'AI Agents': 'AI & DePIN', 'AI': 'AI & DePIN', 'DePIN': 'AI & DePIN',
+    'Decentralized AI': 'AI & DePIN', 'Compute': 'AI & DePIN',
   }
   return map[category] || 'Other'
 }

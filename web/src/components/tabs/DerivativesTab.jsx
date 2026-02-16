@@ -301,6 +301,7 @@ export default function DerivativesTab() {
           layout={{
             ...defaultLayout,
             height: 320,
+            xaxis: { ...defaultLayout.xaxis, type: 'category' },
             yaxis: {
               ...defaultLayout.yaxis,
               title: 'Funding Rate (%)',
@@ -342,6 +343,7 @@ export default function DerivativesTab() {
           layout={{
             ...defaultLayout,
             height: 350,
+            xaxis: { ...defaultLayout.xaxis, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Open Interest (USD)' },
           }}
           config={defaultConfig}
@@ -401,6 +403,7 @@ export default function DerivativesTab() {
             ...defaultLayout,
             height: 380,
             barmode: 'group',
+            xaxis: { ...defaultLayout.xaxis, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Liquidation Volume (USD)' },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
           }}

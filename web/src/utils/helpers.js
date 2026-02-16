@@ -61,7 +61,8 @@ export function calculatePERatio(marketCap, annualizedEarnings) {
 export function categorizeSector(category) {
   const mapping = {
     // Exchanges & Trading
-    'Dexes': 'Exchanges',
+    'Dexs': 'Exchanges',       // DeFiLlama's actual key (534 protocols!)
+    'Dexes': 'Exchanges',      // Alternate spelling
     'CEX': 'Exchanges',
     'Derivatives': 'Exchanges',
     'Options': 'Exchanges',
@@ -70,20 +71,29 @@ export function categorizeSector(category) {
     'Trading App': 'Exchanges',
     'Synthetics': 'Exchanges',
     'Options Vault': 'Exchanges',
+    'Interface': 'Exchanges',
+    'Basis Trading': 'Exchanges',
+    'OTC Marketplace': 'Exchanges',
+    'Volume Boosting': 'Exchanges',
 
     // DeFi Lending & Borrowing
     'Lending': 'DeFi Lending',
     'CDP': 'DeFi Lending',
+    'CDP Manager': 'DeFi Lending',
     'Leveraged Lending': 'DeFi Lending',
     'Leveraged Farming': 'DeFi Lending',
     'Flash Loans': 'DeFi Lending',
     'Risk Curators': 'DeFi Lending',
     'Onchain Capital Allocator': 'DeFi Lending',
+    'Uncollateralized Lending': 'DeFi Lending',
+    'CeDeFi': 'DeFi Lending',
 
     // Infrastructure & L1/L2
     'Bridge': 'Infrastructure',
     'Chain': 'Infrastructure',
     'Cross Chain Bridge': 'Infrastructure',
+    'Bridge Aggregator': 'Infrastructure',
+    'Bridge Aggregators': 'Infrastructure',
     'Oracle': 'Infrastructure',
     'Indexer': 'Infrastructure',
     'Data Availability': 'Infrastructure',
@@ -94,9 +104,17 @@ export function categorizeSector(category) {
     'Block Builders': 'Infrastructure',
     'Wallets': 'Infrastructure',
     'Identity': 'Infrastructure',
+    'Identity & Reputation': 'Infrastructure',
     'Privacy': 'Infrastructure',
     'Zero Knowledge': 'Infrastructure',
     'Decentralized Storage': 'Infrastructure',
+    'Anchor BTC': 'Infrastructure',
+    'Decentralized BTC': 'Infrastructure',
+    'Coins Tracker': 'Infrastructure',
+    'Portfolio Tracker': 'Infrastructure',
+    'Security Extension': 'Infrastructure',
+    'DAO Service Provider': 'Infrastructure',
+    'Mining Pools': 'Infrastructure',
 
     // Staking & Restaking
     'Liquid Staking': 'Staking',
@@ -104,11 +122,14 @@ export function categorizeSector(category) {
     'Liquid Restaking': 'Staking',
     'Staking Pool': 'Staking',
     'Node Operators': 'Staking',
+    'Restaked BTC': 'Staking',
 
     // Stablecoins & Issuers
     'Stablecoins': 'Stablecoins',
     'Stablecoin Issuer': 'Stablecoins',
     'Algo-Stables': 'Stablecoins',
+    'Reserve Currency': 'Stablecoins',
+    'Dual-Token Stablecoin': 'Stablecoins',
 
     // RWA
     'RWA': 'RWA',
@@ -120,8 +141,14 @@ export function categorizeSector(category) {
     'Yield Aggregator': 'DeFi Yield',
     'Farm': 'DeFi Yield',
     'Liquidity Manager': 'DeFi Yield',
+    'Liquidity manager': 'DeFi Yield', // DeFiLlama uses lowercase
     'Liquid Vesting': 'DeFi Yield',
     'Insurance': 'DeFi Yield',
+    'Indexes': 'DeFi Yield',
+    'Gamified Mining': 'DeFi Yield',
+    'Token Locker': 'DeFi Yield',
+    'Yield Lottery': 'DeFi Yield',
+    'Governance Incentives': 'DeFi Yield',
 
     // MEV & Automation
     'MEV': 'MEV',
@@ -131,29 +158,39 @@ export function categorizeSector(category) {
     // Consumer & Social
     'NFT Marketplace': 'Consumer',
     'NFT Lending': 'Consumer',
+    'NFT Launchpad': 'Consumer',
+    'NFT Automated Strategies': 'Consumer',
     'Gaming': 'Consumer',
     'Social': 'Consumer',
     'Prediction Market': 'Consumer',
     'Metaverse': 'Consumer',
     'Music': 'Consumer',
     'Collectibles': 'Consumer',
+    'Domains': 'Consumer',
+    'Luck Games': 'Consumer',
+    'Physical TCG': 'Consumer',
 
     // Payments & Transfers
     'Payments': 'Payments',
     'Payment Processor': 'Payments',
     'Remittance': 'Payments',
+    'Crypto Card Issuer': 'Payments',
 
     // Launchpad & Fundraising
     'Launchpad': 'Launchpad',
     'IDO': 'Launchpad',
     'Crowdfunding': 'Launchpad',
+    'Private Investment Platform': 'Launchpad',
 
     // AI & DePIN
     'AI Agents': 'AI & DePIN',
     'AI': 'AI & DePIN',
+    'Decentralized AI': 'AI & DePIN',
     'DePIN': 'AI & DePIN',
     'Compute': 'AI & DePIN',
     'GPU': 'AI & DePIN',
+    'DOR': 'AI & DePIN',
+    'Video Infrastructure': 'AI & DePIN',
   }
   return mapping[category] || 'Other'
 }

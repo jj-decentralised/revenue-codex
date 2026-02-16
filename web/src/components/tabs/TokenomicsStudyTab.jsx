@@ -247,6 +247,7 @@ export default function TokenomicsStudyTab() {
           layout={{
             ...defaultLayout,
             height: 400,
+            xaxis: { ...defaultLayout.xaxis, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Annualized Revenue (USD)' },
           }}
           config={defaultConfig}
@@ -288,6 +289,7 @@ export default function TokenomicsStudyTab() {
             ...defaultLayout,
             height: 450,
             showlegend: false,
+            xaxis: { ...defaultLayout.xaxis, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'P/E Ratio (Adjusted for Capture Rate)', type: 'log' },
           }}
           config={defaultConfig}
@@ -351,7 +353,7 @@ export default function TokenomicsStudyTab() {
           layout={{
             ...defaultLayout,
             height: 450,
-            xaxis: { ...defaultLayout.xaxis, title: 'Token Velocity (Annual Volume / Market Cap)' },
+            xaxis: { ...defaultLayout.xaxis, title: 'Token Velocity (Annual Volume / Market Cap)', type: 'linear' },
             yaxis: { ...defaultLayout.yaxis, title: 'Revenue Yield (Annual Rev / Market Cap %)' },
             legend: { ...defaultLayout.legend, orientation: 'h', y: -0.15 },
             shapes: [
@@ -460,6 +462,7 @@ export default function TokenomicsStudyTab() {
           layout={{
             ...defaultLayout,
             height: 350,
+            xaxis: { ...defaultLayout.xaxis, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Average P/S Ratio' },
           }}
           config={defaultConfig}

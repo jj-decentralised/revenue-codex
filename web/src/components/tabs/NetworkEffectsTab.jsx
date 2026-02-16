@@ -645,6 +645,7 @@ export default function NetworkEffectsTab() {
             xaxis: {
               ...defaultLayout.xaxis,
               title: 'Number of Chains',
+              type: 'linear',
               dtick: 2,
             },
             yaxis: {
@@ -727,7 +728,7 @@ export default function NetworkEffectsTab() {
             ...defaultLayout,
             height: 400,
             barmode: 'group',
-            xaxis: { ...defaultLayout.xaxis },
+            xaxis: { ...defaultLayout.xaxis, type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Total Value Locked (USD)' },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
           }}
@@ -801,11 +802,13 @@ export default function NetworkEffectsTab() {
             xaxis: {
               ...defaultLayout.xaxis,
               title: '30d TVL Change (%)',
+              type: 'linear',
               range: [-60, 5],
             },
             yaxis: {
               ...defaultLayout.yaxis,
               title: 'Estimated Revenue Change (%)',
+              type: 'linear',
               range: [-70, 5],
             },
             annotations: [

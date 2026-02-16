@@ -264,7 +264,7 @@ export default function MoatsTab() {
               text: sectorAvgMoat.map(s => `${s.count} protocols`),
               hovertemplate: '%{x}<br>Avg Score: %{y:.0f}<br>%{text}<extra></extra>',
             }]}
-            layout={{ ...defaultLayout, height: 380, yaxis: { ...defaultLayout.yaxis, title: 'Avg Moat Score (of 100)' } }}
+            layout={{ ...defaultLayout, height: 380, xaxis: { ...defaultLayout.xaxis, type: 'category' }, yaxis: { ...defaultLayout.yaxis, title: 'Avg Moat Score (of 100)' } }}
             config={defaultConfig}
             className="w-full"
           />
@@ -283,7 +283,7 @@ export default function MoatsTab() {
           }]}
           layout={{
             ...defaultLayout, height: 300, bargap: 0.05,
-            xaxis: { ...defaultLayout.xaxis, title: 'Moat Score' },
+            xaxis: { ...defaultLayout.xaxis, title: 'Moat Score', type: 'linear' },
             yaxis: { ...defaultLayout.yaxis, title: 'Count' },
           }}
           config={defaultConfig}

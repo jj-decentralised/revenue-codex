@@ -308,6 +308,7 @@ export default function MarketStructureTab() {
             layout={{
               ...defaultLayout,
               height: 320,
+              xaxis: { ...defaultLayout.xaxis, type: 'category' },
               yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)' },
             }}
             config={defaultConfig}
@@ -336,7 +337,7 @@ export default function MarketStructureTab() {
           layout={{
             ...defaultLayout,
             height: 420,
-            xaxis: { ...defaultLayout.xaxis, title: 'Trust Score', range: [0, 11], dtick: 1 },
+            xaxis: { ...defaultLayout.xaxis, title: 'Trust Score', type: 'linear', range: [0, 11], dtick: 1 },
             yaxis: { ...defaultLayout.yaxis, title: '24h Volume (USD)', type: 'log' },
           }}
           config={defaultConfig}

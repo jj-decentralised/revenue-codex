@@ -754,7 +754,7 @@ export default function PowerLawTab() {
           layout={{
             ...defaultLayout,
             height: 400,
-            xaxis: { ...defaultLayout.xaxis, title: 'log₁₀(Revenue)' },
+            xaxis: { ...defaultLayout.xaxis, title: 'log₁₀(Revenue)', type: 'linear' },
             yaxis: { ...defaultLayout.yaxis, title: 'Frequency' },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
             annotations: [{

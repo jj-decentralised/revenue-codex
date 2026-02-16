@@ -542,7 +542,7 @@ export default function RiskPremiumTab() {
           layout={{
             ...defaultLayout,
             height: 500,
-            xaxis: { ...defaultLayout.xaxis, title: 'APY Volatility (Spread Proxy, %)', range: [0, 30] },
+            xaxis: { ...defaultLayout.xaxis, title: 'APY Volatility (Spread Proxy, %)', type: 'linear', range: [0, 30] },
             yaxis: { ...defaultLayout.yaxis, title: 'Average APY (%)', range: [0, 40] },
           }}
           config={defaultConfig}
@@ -574,7 +574,7 @@ export default function RiskPremiumTab() {
           layout={{
             ...defaultLayout,
             height: 550,
-            xaxis: { ...defaultLayout.xaxis, title: 'DeFi Sharpe Ratio Proxy', range: [0, Math.max(...sharpeByProtocol.map(p => p.sharpeProxy)) * 1.2] },
+            xaxis: { ...defaultLayout.xaxis, title: 'DeFi Sharpe Ratio Proxy', type: 'linear', range: [0, Math.max(...sharpeByProtocol.map(p => p.sharpeProxy)) * 1.2] },
             yaxis: { ...defaultLayout.yaxis, autorange: 'reversed', tickfont: { size: 10 } },
             margin: { ...defaultLayout.margin, l: 130 },
           }}
@@ -607,7 +607,7 @@ export default function RiskPremiumTab() {
             layout={{
               ...defaultLayout,
               height: 350,
-              xaxis: { ...defaultLayout.xaxis, title: 'Risk Profile' },
+              xaxis: { ...defaultLayout.xaxis, title: 'Risk Profile', type: 'category' },
               yaxis: { ...defaultLayout.yaxis, title: 'Average Risk Premium (%)' },
               annotations: termStructure.map((t, i) => ({
                 x: t.term,

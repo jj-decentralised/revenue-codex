@@ -36,7 +36,8 @@ export default function YieldAnalysisTab() {
   const stableApyValues = stablecoinPools.map(p => p.apy).sort((a, b) => a - b)
   const medianDefiApy = apyValues.length > 0 ? apyValues[Math.floor(apyValues.length / 2)] : 0
   const medianStableApy = stableApyValues.length > 0 ? stableApyValues[Math.floor(stableApyValues.length / 2)] : 0
-  const riskPremium = medianStableApy - treasuryYield
+  const hasYieldData = medianStableApy > 0
+  const riskPremium = hasYieldData ? medianStableApy - treasuryYield : null
 
   // Yield Distribution - buckets
   const buckets = [
@@ -102,9 +103,9 @@ export default function YieldAnalysisTab() {
 
   // Dynamic narrative with computed values
   const dynamicNarrative = yieldAnalysisNarrative.paragraphs.map(p =>
-    p.replace('{medianStable}', formatPercent(medianStableApy))
+    p.replace('{medianStable}', hasYieldData ? formatPercent(medianStableApy) : 'N/A')
       .replace('{treasuryYield}', formatPercent(treasuryYield))
-      .replace('{riskPremium}', (riskPremium * 100).toFixed(0))
+      .replace('{riskPremium}', riskPremium !== null ? (riskPremium * 100).toFixed(0) : 'N/A')
   )
 
   return (
@@ -127,9 +128,9 @@ export default function YieldAnalysisTab() {
         />
         <KPICard
           title="DeFi Risk Premium"
-          value={`${(riskPremium * 100).toFixed(0)} bps`}
+          value={riskPremium !== null ? `${(riskPremium * 100).toFixed(0)} bps` : '—'}
           subtitle="vs Treasury"
-          trend={riskPremium > 0 ? riskPremium * 100 : undefined}
+          trend={riskPremium !== null && riskPremium > 0 ? riskPremium * 100 : undefined}
         />
       </div>
 
@@ -159,7 +160,7 @@ export default function YieldAnalysisTab() {
             ...defaultLayout,
             height: 400,
             barmode: 'group',
-            xaxis: { ...defaultLayout.xaxis, title: 'APY Range' },
+            xaxis: { ...defaultLayout.xaxis, title: 'APY Range', type: 'category' },
             yaxis: { ...defaultLayout.yaxis, title: 'Number of Pools' },
             yaxis2: {
               title: 'TVL (Billions USD)',
