@@ -145,7 +145,7 @@ export default function RevenueBreakdownChart({ feesData }) {
   const chartHeight = Math.max(380, capped * 30 + 80)
 
   return (
-    <div className="bg-white rounded-lg border border-(--color-border) p-5">
+    <div className="bg-(--color-paper) rounded-lg border border-(--color-border) p-5">
       {/* Title */}
       <div className="mb-1">
         <h3 className="text-base font-semibold text-(--color-text)">
@@ -166,7 +166,7 @@ export default function RevenueBreakdownChart({ feesData }) {
               className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                 period === p.key
                   ? 'bg-(--color-primary) text-white'
-                  : 'text-(--color-text-secondary) hover:bg-gray-50'
+                  : 'text-(--color-text-secondary) hover:bg-(--color-paper-alt)'
               }`}
             >
               {p.label}
@@ -219,7 +219,7 @@ export default function RevenueBreakdownChart({ feesData }) {
             className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
               viewMode === 'category'
                 ? 'bg-(--color-primary) text-white'
-                : 'text-(--color-text-secondary) hover:bg-gray-50'
+                : 'text-(--color-text-secondary) hover:bg-(--color-paper-alt)'
             }`}
           >
             By Category
@@ -229,7 +229,7 @@ export default function RevenueBreakdownChart({ feesData }) {
             className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
               viewMode === 'projects'
                 ? 'bg-(--color-primary) text-white'
-                : 'text-(--color-text-secondary) hover:bg-gray-50'
+                : 'text-(--color-text-secondary) hover:bg-(--color-paper-alt)'
             }`}
           >
             By Project
@@ -242,7 +242,7 @@ export default function RevenueBreakdownChart({ feesData }) {
           <button
             onClick={() => setVisibleCount(c => Math.max(5, c - 5))}
             disabled={visibleCount <= 5}
-            className="w-7 h-7 flex items-center justify-center rounded border border-(--color-border) text-sm font-bold text-(--color-text-secondary) hover:bg-gray-50 disabled:opacity-30 cursor-pointer transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded border border-(--color-border) text-sm font-bold text-(--color-text-secondary) hover:bg-(--color-paper-alt) disabled:opacity-30 cursor-pointer transition-colors"
             title="Show fewer"
           >
             −
@@ -253,7 +253,7 @@ export default function RevenueBreakdownChart({ feesData }) {
           <button
             onClick={() => setVisibleCount(c => Math.min(items.length, c + 10))}
             disabled={visibleCount >= items.length}
-            className="w-7 h-7 flex items-center justify-center rounded border border-(--color-border) text-sm font-bold text-(--color-text-secondary) hover:bg-gray-50 disabled:opacity-30 cursor-pointer transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded border border-(--color-border) text-sm font-bold text-(--color-text-secondary) hover:bg-(--color-paper-alt) disabled:opacity-30 cursor-pointer transition-colors"
             title="Show more"
           >
             +

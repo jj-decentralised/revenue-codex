@@ -234,7 +234,7 @@ export default function ValuationsTab() {
         <div className="flex items-center gap-3 mb-3">
           <label className="text-xs text-(--color-text-secondary)">Sector:</label>
           <select value={selectedSector} onChange={e => setSelectedSector(e.target.value)}
-            className="text-xs border border-(--color-border) rounded px-2 py-1 bg-white">
+            className="text-xs border border-(--color-border) rounded px-2 py-1 bg-(--color-paper)">
             {allSectors.map(s => <option key={s} value={s}>{s}{s !== 'All' ? ` (${mergedProtocols.filter(p => p.sector === s && p.mcap > 0 && p.annualizedFees > 10000).length})` : ''}</option>)}
           </select>
         </div>
@@ -268,7 +268,7 @@ export default function ValuationsTab() {
           <div className="flex rounded-md border border-(--color-border) overflow-hidden">
             {['7d', '30d'].map(p => (
               <button key={p} onClick={() => setCorrPeriod(p)}
-                className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${corrPeriod === p ? 'bg-(--color-primary) text-white' : 'text-(--color-text-secondary) hover:bg-gray-50'}`}
+                className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${corrPeriod === p ? 'bg-(--color-primary) text-white' : 'text-(--color-text-secondary) hover:bg-(--color-paper-alt)'}`}
               >{p.toUpperCase()}</button>
             ))}
           </div>
@@ -293,17 +293,17 @@ export default function ValuationsTab() {
             }).filter(Boolean),
             ...(regLine ? [{
               x: regLine.x, y: regLine.y, mode: 'lines', type: 'scatter',
-              name: `R² = ${rSquared.toFixed(3)}`, line: { color: '#EF4444', width: 2, dash: 'dash' }, hoverinfo: 'skip',
+              name: `R² = ${rSquared.toFixed(3)}`, line: { color: colors.danger, width: 2, dash: 'dash' }, hoverinfo: 'skip',
             }] : []),
           ]}
           layout={{
             ...defaultLayout, height: 500,
-            xaxis: { ...defaultLayout.xaxis, title: `Fee Change % (${corrPeriod})`, type: 'linear', zeroline: true, zerolinecolor: '#D1D5DB' },
-            yaxis: { ...defaultLayout.yaxis, title: `Price Change % (${corrPeriod})`, type: 'linear', zeroline: true, zerolinecolor: '#D1D5DB' },
+            xaxis: { ...defaultLayout.xaxis, title: `Fee Change % (${corrPeriod})`, type: 'linear', zeroline: true, zerolinecolor: '#E5E3E0' },
+            yaxis: { ...defaultLayout.yaxis, title: `Price Change % (${corrPeriod})`, type: 'linear', zeroline: true, zerolinecolor: '#E5E3E0' },
             legend: { ...defaultLayout.legend, orientation: 'h', y: -0.15 },
             shapes: [
-              { type: 'line', x0: 0, x1: 0, y0: 0, y1: 1, yref: 'paper', line: { color: '#E5E7EB', dash: 'dot', width: 1 } },
-              { type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0, y1: 0, line: { color: '#E5E7EB', dash: 'dot', width: 1 } },
+              { type: 'line', x0: 0, x1: 0, y0: 0, y1: 1, yref: 'paper', line: { color: '#E5E3E0', dash: 'dot', width: 1 } },
+              { type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0, y1: 0, line: { color: '#E5E3E0', dash: 'dot', width: 1 } },
             ],
           }}
           config={defaultConfig} className="w-full"

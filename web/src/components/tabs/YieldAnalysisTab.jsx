@@ -168,7 +168,7 @@ export default function YieldAnalysisTab() {
               overlaying: 'y',
               side: 'right',
               gridcolor: 'transparent',
-              tickfont: { size: 11, color: '#6B7280' },
+              tickfont: { size: 11, color: '#7A7A7A' },
             },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
           }}

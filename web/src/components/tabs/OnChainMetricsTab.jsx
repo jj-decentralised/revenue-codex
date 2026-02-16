@@ -171,7 +171,7 @@ export default function OnChainMetricsTab() {
   if (data?.notConfigured) {
     return (
       <div className="text-center py-20">
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 max-w-lg mx-auto">
+        <div className="bg-amber-50 border border-amber-200 p-6 max-w-lg mx-auto">
           <h3 className="text-lg font-semibold text-amber-800 mb-2">Santiment API Not Configured</h3>
           <p className="text-sm text-amber-700">
             Configure <code className="bg-amber-100 px-1 rounded">SANTIMENT_API_KEY</code> in Vercel environment variables to enable on-chain metrics.

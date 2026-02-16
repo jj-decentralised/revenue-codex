@@ -112,12 +112,12 @@ export default function SentimentTab() {
 
       {/* Headline divergence */}
       {currentRevenuePercentile !== null && sentimentDropFromATH !== null && (
-        <div className="bg-white border border-(--color-border) rounded-lg p-5 text-center">
-          <p className="text-lg font-semibold text-(--color-text)">
-            Sentiment is <span className="text-(--color-danger)">{formatPercent(sentimentDropFromATH)}</span> off ATH
-            while Revenue is in the <span className="text-(--color-success)">{formatPercent(currentRevenuePercentile)}</span> percentile
+        <div className="border-t-2 border-(--color-ink) bg-(--color-paper-warm) p-5 text-center">
+          <p className="text-lg font-bold font-serif text-(--color-ink)">
+            Sentiment is <span className="text-(--color-negative)">{formatPercent(sentimentDropFromATH)}</span> off ATH
+            while Revenue is in the <span className="text-(--color-positive)">{formatPercent(currentRevenuePercentile)}</span> percentile
           </p>
-          <p className="text-sm text-(--color-text-secondary) mt-1">This divergence mirrors the Energy sector in 2020–21</p>
+          <p className="text-sm text-(--color-ink-muted) mt-1">This divergence mirrors the Energy sector in 2020–21</p>
         </div>
       )}
 
@@ -156,7 +156,7 @@ export default function SentimentTab() {
               side: 'right',
               range: [0, 100],
               gridcolor: 'transparent',
-              tickfont: { size: 11, color: '#6B7280' },
+              tickfont: { size: 11, color: '#7A7A7A' },
             },
             legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
             barmode: 'overlay',
@@ -206,9 +206,9 @@ export default function SentimentTab() {
             </div>
 
             {/* Yearly Summary Table */}
-            <div className="bg-white border border-(--color-border) rounded-lg overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-(--color-border)">
-                <span className="text-xs font-semibold text-(--color-text-secondary)">Yearly Summary</span>
+            <div className="border border-(--color-rule) overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 bg-(--color-paper-alt) border-b border-(--color-rule)">
+                <span className="text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">Yearly Summary</span>
                 <button
                   onClick={() => downloadCSV('yearly-revenue-summary', ['Year','Days','AvgDailyRevenue','TotalRevenue','AvgFearGreed'], yearStats.map(s => [s.year, s.days, s.avgRev, s.totalRev, s.avgFG.toFixed(1)]))}
                   className="shrink-0 text-xs text-(--color-text-secondary) hover:text-(--color-primary) cursor-pointer flex items-center gap-1 px-2 py-0.5 rounded border border-(--color-border) hover:border-(--color-primary) transition-colors"
@@ -217,7 +217,7 @@ export default function SentimentTab() {
                   CSV
                 </button>
               </div>
-              <div className="grid grid-cols-5 text-xs font-semibold text-(--color-text-secondary) px-4 py-2 border-b border-(--color-border)">
+              <div className="grid grid-cols-5 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest px-4 py-2 border-b-2 border-(--color-ink)">
                 <span>Year</span>
                 <span className="text-right">Days</span>
                 <span className="text-right">Avg Daily Revenue</span>
@@ -225,7 +225,7 @@ export default function SentimentTab() {
                 <span className="text-right">Avg F&amp;G</span>
               </div>
               {yearStats.map(s => (
-                <div key={s.year} className="grid grid-cols-5 text-sm text-(--color-text) px-4 py-2 border-b border-(--color-border) last:border-b-0 hover:bg-gray-50">
+                <div key={s.year} className="grid grid-cols-5 text-sm text-(--color-ink) px-4 py-2.5 border-b border-(--color-rule) last:border-b-0 hover:bg-(--color-paper-alt) font-mono">
                   <span className="font-medium">{s.year}</span>
                   <span className="text-right">{s.days}</span>
                   <span className="text-right font-medium">{formatCurrency(s.avgRev)}</span>
@@ -310,9 +310,9 @@ export default function SentimentTab() {
             height: 300,
             yaxis: { ...defaultLayout.yaxis, range: [0, 100], title: 'Index' },
             shapes: [
-              { type: 'line', x0: fgDates[0], x1: fgDates[fgDates.length - 1], y0: 50, y1: 50, line: { color: '#D1D5DB', dash: 'dash', width: 1 } },
-              { type: 'line', x0: fgDates[0], x1: fgDates[fgDates.length - 1], y0: 25, y1: 25, line: { color: '#FEE2E2', dash: 'dot', width: 1 } },
-              { type: 'line', x0: fgDates[0], x1: fgDates[fgDates.length - 1], y0: 75, y1: 75, line: { color: '#D1FAE5', dash: 'dot', width: 1 } },
+              { type: 'line', x0: fgDates[0], x1: fgDates[fgDates.length - 1], y0: 50, y1: 50, line: { color: '#E5E3E0', dash: 'dash', width: 1 } },
+              { type: 'line', x0: fgDates[0], x1: fgDates[fgDates.length - 1], y0: 25, y1: 25, line: { color: '#C1352D33', dash: 'dot', width: 1 } },
+              { type: 'line', x0: fgDates[0], x1: fgDates[fgDates.length - 1], y0: 75, y1: 75, line: { color: '#2E7D4F33', dash: 'dot', width: 1 } },
             ],
           }}
           config={defaultConfig}

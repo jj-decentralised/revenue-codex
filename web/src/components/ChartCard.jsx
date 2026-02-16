@@ -2,21 +2,21 @@ import { downloadCSV } from '../utils/csv'
 
 export default function ChartCard({ title, subtitle, children, className = '', csvData }) {
   return (
-    <div className={`bg-white rounded-lg border border-(--color-border) p-5 ${className}`}>
+    <div className={`border border-(--color-rule) bg-(--color-paper) p-6 ${className}`}>
       {(title || subtitle) && (
         <div className="mb-4 flex items-start justify-between gap-2">
           <div className="min-w-0">
             {title && (
-              <h3 className="text-sm font-semibold text-(--color-text)">{title}</h3>
+              <h3 className="font-serif text-lg font-bold text-(--color-ink)">{title}</h3>
             )}
             {subtitle && (
-              <p className="text-xs text-(--color-text-secondary) mt-0.5">{subtitle}</p>
+              <p className="text-sm text-(--color-ink-muted) mt-0.5">{subtitle}</p>
             )}
           </div>
           {csvData && (
             <button
               onClick={() => downloadCSV(csvData.filename, csvData.headers, csvData.rows)}
-              className="shrink-0 text-xs text-(--color-text-secondary) hover:text-(--color-primary) cursor-pointer flex items-center gap-1 px-2 py-1 rounded border border-(--color-border) hover:border-(--color-primary) transition-colors"
+              className="shrink-0 text-xs font-mono text-(--color-ink-muted) hover:text-(--color-ink) cursor-pointer flex items-center gap-1 px-2 py-1 border border-(--color-rule) hover:border-(--color-ink) transition-colors"
               title="Export CSV"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

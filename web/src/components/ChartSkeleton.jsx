@@ -1,7 +1,7 @@
 // Shimmer animation CSS-only loading skeletons for charts and KPIs
 
 const shimmerStyle = {
-  background: 'linear-gradient(90deg, var(--color-card) 25%, var(--color-border) 50%, var(--color-card) 75%)',
+  background: 'linear-gradient(90deg, var(--color-paper-alt) 25%, var(--color-rule) 50%, var(--color-paper-alt) 75%)',
   backgroundSize: '200% 100%',
   animation: 'shimmer 1.5s infinite ease-in-out',
 }

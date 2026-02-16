@@ -601,13 +601,13 @@ export default function NetworkEffectsTab() {
           className="w-full"
         />
         <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-          <div className="bg-green-50 border border-green-200 rounded p-3">
+          <div className="bg-green-50 border border-green-200 p-3">
             <p className="font-semibold text-green-800">📈 Upward Spiral</p>
             <p className="text-green-700 text-xs mt-1">
               Growing protocols: avg efficiency {avgGrowthEfficiency.toFixed(1)}% — TVL growth attracts more users, generating more fees, improving narrative.
             </p>
           </div>
-          <div className="bg-red-50 border border-red-200 rounded p-3">
+          <div className="bg-red-50 border border-red-200 p-3">
             <p className="font-semibold text-red-800">📉 Downward Spiral</p>
             <p className="text-red-700 text-xs mt-1">
               Shrinking protocols: avg efficiency {avgShrinkEfficiency.toFixed(1)}% — TVL decline reduces fees faster than TVL itself drops (reflexive downside).
@@ -672,7 +672,7 @@ export default function NetworkEffectsTab() {
             mode: 'markers+text',
             type: 'scatter',
             textposition: 'top center',
-            textfont: { size: 9, color: '#6B7280' },
+            textfont: { size: 9, color: '#7A7A7A' },
             marker: {
               color: colors.primary,
               size: dexScatterData.map(p => Math.max(10, Math.min(40, Math.sqrt(p.volume24h / 1e7) * 5))),

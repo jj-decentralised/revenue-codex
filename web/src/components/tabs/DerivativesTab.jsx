@@ -120,7 +120,7 @@ export default function DerivativesTab() {
   if (!hasAnyData) {
     return (
       <div className="space-y-6">
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 text-center">
+        <div className="bg-amber-50 border border-amber-200 p-5 text-center">
           <p className="text-amber-800 font-medium">Derivatives Data Unavailable</p>
           <p className="text-amber-600 text-sm mt-1">
             Configure Coinglass API proxy for on-chain derivatives data, or check DeFiLlama connectivity.

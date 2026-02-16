@@ -7,42 +7,84 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: Georgia, Cambria, 'Times New Roman', serif;
   font-size: 1.5rem;
-  font-weight: 600;
-  color: #111827;
+  font-weight: 700;
+  color: #1A1A1A;
   opacity: 0.5;
 }
 
 @theme {
-  --font-sans: "Inter", system-ui, sans-serif;
-  --color-primary: #2563EB;
-  --color-primary-light: #3B82F6;
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: Georgia, Cambria, 'Times New Roman', serif;
+  --font-mono: Consolas, 'Courier New', monospace;
+
+  /* Ink & Paper — editorial palette */
+  --color-paper: #FFFFFF;
+  --color-paper-alt: #F5F4F2;
+  --color-paper-warm: #FAF9F7;
+  --color-ink: #1A1A1A;
+  --color-ink-light: #4A4A4A;
+  --color-ink-muted: #7A7A7A;
+  --color-rule: #E5E3E0;
+
+  /* Accents */
+  --color-accent-blue: #2E5E8E;
+  --color-accent-green: #2E7D4F;
+  --color-accent-amber: #B8860B;
+
+  /* Semantic */
+  --color-positive: #2E7D4F;
+  --color-negative: #C1352D;
+
+  /* Aliases for backward compat */
+  --color-primary: #2E5E8E;
+  --color-primary-light: #3D7AB8;
   --color-surface: #FFFFFF;
-  --color-border: #E5E7EB;
-  --color-text: #111827;
-  --color-text-secondary: #6B7280;
-  --color-bg: #F9FAFB;
-  --color-success: #10B981;
-  --color-danger: #EF4444;
-  --color-warning: #F59E0B;
+  --color-border: #E5E3E0;
+  --color-text: #1A1A1A;
+  --color-text-secondary: #7A7A7A;
+  --color-bg: #FFFFFF;
+  --color-success: #2E7D4F;
+  --color-danger: #C1352D;
+  --color-warning: #B8860B;
 }
 
-/* Tailwind v4 removed the global default border-color that v3 had.
-   Restore it so `border` utilities use our theme gray, not currentColor. */
+/* Restore default border-color */
 *, ::before, ::after, ::backdrop {
-  border-color: var(--color-border, #E5E7EB);
+  border-color: var(--color-rule, #E5E3E0);
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
   margin: 0;
+  line-height: 1.625;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Plotly overrides for clean white aesthetic */
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  letter-spacing: -0.025em;
+}
+
+/* Editorial utility classes */
+.section-rule {
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--color-rule);
+  padding-top: 2rem;
+}
+
+.section-rule-heavy {
+  margin-top: 2.5rem;
+  border-top: 2px solid var(--color-ink);
+  padding-top: 2rem;
+}
+
+/* Plotly overrides */
 .js-plotly-plot .plotly .modebar {
   opacity: 0;
   transition: opacity 0.2s;
@@ -60,6 +102,6 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
+  background: var(--color-rule);
   border-radius: 3px;
 }

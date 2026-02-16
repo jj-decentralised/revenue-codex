@@ -13,7 +13,7 @@ const SECTOR_COLORS = {
   'Exchange Tokens': '#F59E0B',
   'DeFi Lending':    '#10B981',
   'Staking':         '#8B5CF6',
-  'Stablecoins':     '#6B7280',
+  'Stablecoins':     '#7A7A7A',
   'Infrastructure':  '#EC4899',
   'DeFi Yield':      '#14B8A6',
   'Consumer':        '#F97316',
@@ -330,14 +330,14 @@ export default function SectorTimeSeries({ feesData, protocols, markets }) {
           <div className="flex rounded-md border border-(--color-border) overflow-hidden">
             {[['3m', '3M'], ['6m', '6M'], ['1y', '1Y'], ['all', 'All']].map(([k, label]) => (
               <button key={k} onClick={() => setRevPeriod(k)}
-                className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${revPeriod === k ? 'bg-(--color-primary) text-white' : 'text-(--color-text-secondary) hover:bg-gray-50'}`}
+                className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${revPeriod === k ? 'bg-(--color-primary) text-white' : 'text-(--color-text-secondary) hover:bg-(--color-paper-alt)'}`}
               >{label}</button>
             ))}
           </div>
           <div className="flex rounded-md border border-(--color-border) overflow-hidden">
             {[['raw', 'Raw'], ['7d', '7D EMA'], ['weekly', 'Weekly']].map(([k, label]) => (
               <button key={k} onClick={() => setRevSmoothing(k)}
-                className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${revSmoothing === k ? 'bg-(--color-primary) text-white' : 'text-(--color-text-secondary) hover:bg-gray-50'}`}
+                className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${revSmoothing === k ? 'bg-(--color-primary) text-white' : 'text-(--color-text-secondary) hover:bg-(--color-paper-alt)'}`}
               >{label}</button>
             ))}
           </div>
@@ -361,7 +361,7 @@ export default function SectorTimeSeries({ feesData, protocols, markets }) {
   // ═══════════════════════════════════════
   function renderMcapChart() {
     if (mcapLoading) return (
-      <div className="bg-white rounded-lg border border-(--color-border) p-8 text-center">
+      <div className="bg-(--color-paper) rounded-lg border border-(--color-border) p-8 text-center">
         <div className="animate-pulse text-sm text-(--color-text-secondary)">Loading market cap data for top 50 coins…</div>
       </div>
     )
@@ -392,7 +392,7 @@ export default function SectorTimeSeries({ feesData, protocols, markets }) {
           <div className="flex rounded-md border border-(--color-border) overflow-hidden">
             {[['3m', '3M'], ['6m', '6M'], ['1y', '1Y'], ['all', 'All']].map(([k, label]) => (
               <button key={k} onClick={() => setMcapPeriod(k)}
-                className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${mcapPeriod === k ? 'bg-(--color-primary) text-white' : 'text-(--color-text-secondary) hover:bg-gray-50'}`}
+                className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${mcapPeriod === k ? 'bg-(--color-primary) text-white' : 'text-(--color-text-secondary) hover:bg-(--color-paper-alt)'}`}
               >{label}</button>
             ))}
           </div>

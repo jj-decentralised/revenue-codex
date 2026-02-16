@@ -400,29 +400,29 @@ export default function MacroTab() {
 
       {/* Macro Regime + Fear & Greed */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white border border-(--color-border) rounded-lg p-6 text-center">
-          <p className="text-xs font-medium text-(--color-text-secondary) uppercase tracking-wide mb-2">
+        <div className="border border-(--color-rule) p-6 text-center">
+          <p className="text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest mb-3">
             Current Macro Regime
           </p>
           <span 
-            className="inline-block px-6 py-3 rounded-full text-white text-xl font-bold"
+            className="inline-block px-6 py-3 text-(--color-paper) text-xl font-bold font-serif"
             style={{ backgroundColor: macroRegime.color }}
           >
             {macroRegime.regime}
           </span>
-          <p className="text-sm text-(--color-text-secondary) mt-3">
+          <p className="text-sm text-(--color-ink-muted) mt-3">
             Based on Treasury, DXY, VIX, crypto momentum, DeFi spreads, and sentiment
           </p>
         </div>
 
-        <div className="bg-white border border-(--color-border) rounded-lg p-6 text-center">
-          <p className="text-xs font-medium text-(--color-text-secondary) uppercase tracking-wide mb-2">
+        <div className="border border-(--color-rule) p-6 text-center">
+          <p className="text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest mb-3">
             Crypto Fear & Greed Index
           </p>
           {currentFearGreed ? (
             <>
               <span 
-                className="inline-block px-6 py-3 rounded-full text-white text-xl font-bold"
+                className="inline-block px-6 py-3 text-(--color-paper) text-xl font-bold font-serif"
                 style={{ 
                   backgroundColor: currentFearGreed.value >= 60 ? colors.success 
                     : currentFearGreed.value >= 40 ? colors.warning 
@@ -431,23 +431,23 @@ export default function MacroTab() {
               >
                 {currentFearGreed.value} — {currentFearGreed.classification}
               </span>
-              <p className="text-sm text-(--color-text-secondary) mt-3">
+              <p className="text-sm text-(--color-ink-muted) mt-3">
                 Historical range: 0 (Extreme Fear) to 100 (Extreme Greed)
               </p>
             </>
           ) : (
-            <span className="text-(--color-text-secondary)">No data</span>
+            <span className="text-(--color-ink-muted)">No data</span>
           )}
         </div>
       </div>
 
       {/* MVRV Indicator (if available) */}
       {currentMVRV !== null && (
-        <div className="bg-white border border-(--color-border) rounded-lg p-5 text-center">
-          <p className="text-xs font-medium text-(--color-text-secondary) uppercase tracking-wide">
+        <div className="border border-(--color-rule) p-5 text-center">
+          <p className="text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">
             BTC MVRV Ratio (Santiment)
           </p>
-          <p className="text-4xl font-bold mt-2" style={{ 
+          <p className="text-4xl font-bold font-serif mt-2" style={{
             color: currentMVRV > 3.5 ? colors.danger 
               : currentMVRV > 2.5 ? colors.warning 
               : currentMVRV < 1 ? colors.success 

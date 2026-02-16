@@ -231,7 +231,7 @@ export default function MarketStructureTab() {
             annotations: [{
               x: 0.99, y: 0.98, xref: 'paper', yref: 'paper', showarrow: false,
               text: '🟢 Trust≥9 · 🔵 Trust≥7 · 🟡 Trust≥5 · 🔴 Trust<5',
-              font: { size: 10, color: '#6B7280' }, xanchor: 'right',
+              font: { size: 10, color: '#7A7A7A' }, xanchor: 'right',
             }],
           }}
           config={defaultConfig}
@@ -286,7 +286,7 @@ export default function MarketStructureTab() {
               annotations: [{
                 text: `<b>${formatCurrency(cexVolumeEstimate + totalDexVolume24h)}</b><br>Total`,
                 x: 0.5, y: 0.5, showarrow: false,
-                font: { size: 14, color: '#111827' },
+                font: { size: 14, color: '#1A1A1A' },
               }],
             }}
             config={defaultConfig}
@@ -355,7 +355,7 @@ export default function MarketStructureTab() {
             subtitle={hhiClassification}
             className="h-auto"
           />
-          <div className="bg-white rounded-lg border border-gray-200 p-4 text-sm text-gray-600">
+          <div className="bg-(--color-paper) border border-(--color-rule) p-4 text-sm text-(--color-ink-muted)">
             <p><strong>HHI Scale:</strong></p>
             <p>• &lt;1500: Competitive</p>
             <p>• 1500–2500: Moderate</p>

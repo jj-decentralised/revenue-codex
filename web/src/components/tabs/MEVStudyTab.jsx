@@ -386,7 +386,7 @@ export default function MEVStudyTab() {
             annotations: [{
               text: `$${formatNumber(totalCategoryRevenue)}`,
               showarrow: false,
-              font: { size: 16, color: '#111827' },
+              font: { size: 16, color: '#1A1A1A' },
             }],
           }}
           config={defaultConfig}

@@ -188,31 +188,31 @@ export default function MoatsTab() {
         csvData={{ filename: 'moat-scores', headers: ['Rank','Protocol','TVL','Revenue24h','MCap','Chains','Sector','MoatScore','Rating'], rows: top50.map((p, i) => [i+1, p.name, p.tvl, p.revenue24h, p.mcap, p.chains, p.sector, p.moatScore, p.moatRating]) }}>
         <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-white">
-              <tr className="border-b border-(--color-border)">
-                <th className="text-left py-2 px-2 font-medium text-(--color-text-secondary)">#</th>
-                <th className="text-left py-2 px-2 font-medium text-(--color-text-secondary)">Protocol</th>
-                <th className="text-right py-2 px-2 font-medium text-(--color-text-secondary)">TVL</th>
-                <th className="text-right py-2 px-2 font-medium text-(--color-text-secondary)">Revenue 24h</th>
-                <th className="text-right py-2 px-2 font-medium text-(--color-text-secondary)">MCap</th>
-                <th className="text-center py-2 px-2 font-medium text-(--color-text-secondary)">Chains</th>
-                <th className="text-left py-2 px-2 font-medium text-(--color-text-secondary)">Sector</th>
-                <th className="text-center py-2 px-2 font-medium text-(--color-text-secondary)">Score</th>
-                <th className="text-center py-2 px-2 font-medium text-(--color-text-secondary)">Rating</th>
+            <thead className="sticky top-0 bg-(--color-paper)">
+              <tr className="border-b-2 border-(--color-ink)">
+                <th className="text-left py-2 px-3 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">#</th>
+                <th className="text-left py-2 px-3 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">Protocol</th>
+                <th className="text-right py-2 px-3 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">TVL</th>
+                <th className="text-right py-2 px-3 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">Revenue 24h</th>
+                <th className="text-right py-2 px-3 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">MCap</th>
+                <th className="text-center py-2 px-3 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">Chains</th>
+                <th className="text-left py-2 px-3 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">Sector</th>
+                <th className="text-center py-2 px-3 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">Score</th>
+                <th className="text-center py-2 px-3 text-[11px] font-semibold text-(--color-ink-muted) uppercase tracking-widest">Rating</th>
               </tr>
             </thead>
             <tbody>
               {top50.map((p, i) => (
-                <tr key={p.slug} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                  <td className="py-2 px-2 text-(--color-text-secondary)">{i + 1}</td>
-                  <td className="py-2 px-2 font-medium text-(--color-text)">{p.name}</td>
-                  <td className="py-2 px-2 text-right text-(--color-text-secondary)">{formatCurrency(p.tvl)}</td>
-                  <td className="py-2 px-2 text-right text-(--color-text-secondary)">{formatCurrency(p.revenue24h)}</td>
-                  <td className="py-2 px-2 text-right text-(--color-text-secondary)">{p.mcap > 0 ? formatCurrency(p.mcap) : '—'}</td>
-                  <td className="py-2 px-2 text-center text-(--color-text-secondary)">{p.chains}</td>
-                  <td className="py-2 px-2 text-(--color-text-secondary) text-xs">{p.sector}</td>
-                  <td className="py-2 px-2 text-center font-mono font-medium">{p.moatScore}</td>
-                  <td className="py-2 px-2 text-center"><MoatBadge rating={p.moatRating} /></td>
+                <tr key={p.slug} className="border-b border-(--color-rule) hover:bg-(--color-paper-alt) transition-colors">
+                  <td className="py-2.5 px-3 font-mono text-sm text-(--color-ink-muted)">{i + 1}</td>
+                  <td className="py-2.5 px-3 font-medium text-(--color-ink)">{p.name}</td>
+                  <td className="py-2.5 px-3 text-right font-mono text-sm">{formatCurrency(p.tvl)}</td>
+                  <td className="py-2.5 px-3 text-right font-mono text-sm">{formatCurrency(p.revenue24h)}</td>
+                  <td className="py-2.5 px-3 text-right font-mono text-sm">{p.mcap > 0 ? formatCurrency(p.mcap) : '—'}</td>
+                  <td className="py-2.5 px-3 text-center font-mono text-sm">{p.chains}</td>
+                  <td className="py-2.5 px-3 text-(--color-ink-muted) text-xs">{p.sector}</td>
+                  <td className="py-2.5 px-3 text-center font-mono font-semibold">{p.moatScore}</td>
+                  <td className="py-2.5 px-3 text-center"><MoatBadge rating={p.moatRating} /></td>
                 </tr>
               ))}
             </tbody>
@@ -229,7 +229,7 @@ export default function MoatsTab() {
               x: scatterBg.map(p => p.tvl), y: scatterBg.map(p => p.revenue24h),
               text: scatterBg.map(p => p.name),
               mode: 'markers', type: 'scatter', name: 'All Protocols',
-              marker: { color: '#D1D5DB', size: 6, opacity: 0.4 },
+              marker: { color: '#E5E3E0', size: 6, opacity: 0.4 },
               hovertemplate: '%{text}<br>TVL: $%{x:,.0f}<br>Rev: $%{y:,.0f}<extra></extra>',
             },
             ...['Strong Moat', 'Moderate Moat', 'Weak Moat'].map(rating => {
@@ -306,12 +306,12 @@ export default function MoatsTab() {
       {/* Curated moat analysis cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Object.entries(moatsNarrative.protocols).map(([key, protocol]) => (
-          <div key={key} className="bg-white border border-(--color-border) rounded-lg p-5">
+          <div key={key} className="border border-(--color-rule) p-5">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-(--color-text)">{protocol.name}</h4>
+              <h4 className="font-serif font-bold text-(--color-ink)">{protocol.name}</h4>
               <MoatBadge rating={protocol.rating === 'Highly Durable' ? 'Strong Moat' : protocol.rating === 'Weakening' ? 'Weak Moat' : 'Moderate Moat'} />
             </div>
-            <p className="text-sm text-(--color-text-secondary) leading-relaxed">{protocol.analysis}</p>
+            <p className="text-sm text-(--color-ink-light) leading-relaxed">{protocol.analysis}</p>
           </div>
         ))}
       </div>

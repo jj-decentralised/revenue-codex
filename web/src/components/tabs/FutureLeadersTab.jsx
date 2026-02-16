@@ -159,7 +159,7 @@ export default function FutureLeadersTab() {
           />
           <span className="text-lg font-semibold text-(--color-primary) min-w-[3rem]">{rwaMultiplier}x</span>
         </div>
-        <div className="bg-gray-50 border border-(--color-border) rounded p-3 mb-4">
+        <div className="bg-(--color-paper-alt) border border-(--color-border) p-3 mb-4">
           <p className="text-sm text-(--color-text)">
             At <span className="font-semibold text-(--color-primary)">{rwaMultiplier}x</span> TVL growth, projected daily revenue:{' '}
             <span className="font-semibold text-(--color-success)">

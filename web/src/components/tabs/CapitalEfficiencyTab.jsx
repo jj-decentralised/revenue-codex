@@ -245,7 +245,7 @@ export default function CapitalEfficiencyTab() {
     arrowcolor: '#9CA3AF',
     ax: 20,
     ay: -20,
-    font: { size: 10, color: '#E5E7EB' },
+    font: { size: 10, color: '#E5E3E0' },
     bgcolor: 'rgba(17,24,39,0.8)',
     borderpad: 2,
   }))
@@ -354,7 +354,7 @@ export default function CapitalEfficiencyTab() {
             },
             text: top25Efficient.map(p => `${p.efficiency.toFixed(2)}%`),
             textposition: 'outside',
-            textfont: { size: 10, color: '#E5E7EB' },
+            textfont: { size: 10, color: '#E5E3E0' },
             hovertemplate: '%{y}<br>Efficiency: %{x:.2f}%<extra></extra>',
           }]}
           layout={{
@@ -498,7 +498,7 @@ export default function CapitalEfficiencyTab() {
               y: a.y,
               text: a.text,
               showarrow: false,
-              font: { size: 12, color: '#6B7280' },
+              font: { size: 12, color: '#7A7A7A' },
               xanchor: a.xanchor,
               yanchor: a.yanchor,
             })),

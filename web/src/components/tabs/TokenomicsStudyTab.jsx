@@ -362,8 +362,8 @@ export default function TokenomicsStudyTab() {
             legend: { ...defaultLayout.legend, orientation: 'h', y: -0.15 },
             shapes: [
               // Quadrant dividers
-              { type: 'line', x0: 10, x1: 10, y0: 0, y1: 20, line: { color: '#E5E7EB', dash: 'dash', width: 1 } },
-              { type: 'line', x0: 0, x1: 50, y0: 5, y1: 5, line: { color: '#E5E7EB', dash: 'dash', width: 1 } },
+              { type: 'line', x0: 10, x1: 10, y0: 0, y1: 20, line: { color: '#E5E3E0', dash: 'dash', width: 1 } },
+              { type: 'line', x0: 0, x1: 50, y0: 5, y1: 5, line: { color: '#E5E3E0', dash: 'dash', width: 1 } },
             ],
             annotations: [
               { x: 5, y: 18, text: 'Held for Yield', showarrow: false, font: { size: 10, color: colors.success } },
@@ -395,9 +395,9 @@ export default function TokenomicsStudyTab() {
             ...defaultLayout,
             height: 400,
             xaxis: { ...defaultLayout.xaxis, tickangle: -30, type: 'category' },
-            yaxis: { ...defaultLayout.yaxis, title: 'Real Yield (Staking APY - Inflation %)', zeroline: true, zerolinecolor: '#111827', zerolinewidth: 2 },
+            yaxis: { ...defaultLayout.yaxis, title: 'Real Yield (Staking APY - Inflation %)', zeroline: true, zerolinecolor: '#1A1A1A', zerolinewidth: 2 },
             shapes: [
-              { type: 'line', x0: -0.5, x1: stakingTokens.length - 0.5, y0: 0, y1: 0, line: { color: '#111827', width: 2 } },
+              { type: 'line', x0: -0.5, x1: stakingTokens.length - 0.5, y0: 0, y1: 0, line: { color: '#1A1A1A', width: 2 } },
             ],
           }}
           config={defaultConfig}
