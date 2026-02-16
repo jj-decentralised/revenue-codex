@@ -27,6 +27,7 @@ const TokenomicsStudyTab = lazy(() => import('./components/tabs/TokenomicsStudyT
 const StablecoinFlowsTab = lazy(() => import('./components/tabs/StablecoinFlowsTab'))
 const RevenueScoreTab = lazy(() => import('./components/tabs/RevenueScoreTab'))
 const SocialIntelligenceTab = lazy(() => import('./components/tabs/SocialIntelligenceTab'))
+const BubbleComparisonTab = lazy(() => import('./components/tabs/BubbleComparisonTab'))
 
 const TABS = [
   // Group 1: Revenue Fundamentals
@@ -55,6 +56,7 @@ const TABS = [
   { id: 'networkeffects', label: 'Network Effects', group: 'Research Studies' },
   { id: 'mevstudy', label: 'MEV & Revenue', group: 'Research Studies' },
   { id: 'tokenomics', label: 'Tokenomics', group: 'Research Studies' },
+  { id: 'bubblecomp', label: 'Dot-Com vs Crypto', group: 'Research Studies' },
 ]
 
 const TAB_COMPONENTS = {
@@ -79,6 +81,7 @@ const TAB_COMPONENTS = {
   networkeffects: NetworkEffectsTab,
   mevstudy: MEVStudyTab,
   stablecoins: StablecoinFlowsTab,
+  bubblecomp: BubbleComparisonTab,
 }
 
 export default function App() {
