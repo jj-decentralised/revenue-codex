@@ -136,34 +136,66 @@ export default function SentimentTab() {
         />
       </ChartCard>
 
-      {/* Scatter: Revenue vs Sentiment */}
-      <ChartCard title="Revenue–Sentiment Scatter" subtitle="Each point is a day — X = Fear & Greed, Y = Daily Revenue">
-        <Plot
-          data={[{
-            x: scatterPoints.map(p => p.fg),
-            y: scatterPoints.map(p => p.revenue),
-            text: scatterPoints.map(p => p.date),
-            mode: 'markers',
-            type: 'scatter',
-            marker: {
-              color: scatterPoints.map(p => p.fg),
-              colorscale: [[0, colors.danger], [0.5, colors.warning], [1, colors.success]],
-              size: 6,
-              opacity: 0.6,
-              colorbar: { title: 'F&G', thickness: 12, len: 0.5 },
-            },
-            hovertemplate: 'Date: %{text}<br>F&G: %{x}<br>Revenue: $%{y:,.0f}<extra></extra>',
-          }]}
-          layout={{
-            ...defaultLayout,
-            height: 450,
-            xaxis: { ...defaultLayout.xaxis, title: 'Fear & Greed Index', range: [0, 100], type: 'linear' },
-            yaxis: { ...defaultLayout.yaxis, title: 'Daily Revenue (USD)' },
-          }}
-          config={defaultConfig}
-          className="w-full"
-        />
-      </ChartCard>
+      {/* Scatter: Revenue vs Sentiment — broken out by year */}
+      {(() => {
+        // Group scatter points by year
+        const byYear = {}
+        scatterPoints.forEach(p => {
+          const year = p.date.slice(0, 4)
+          if (!byYear[year]) byYear[year] = []
+          byYear[year].push(p)
+        })
+        const years = Object.keys(byYear).sort()
+        // Consistent y-axis across all years for comparison
+        const maxRevenue = Math.max(...scatterPoints.map(p => p.revenue)) * 1.05
+
+        return (
+          <>
+            <h3 className="text-lg font-semibold text-(--color-text) pt-2">
+              Revenue–Sentiment Scatter by Year
+            </h3>
+            <p className="text-sm text-(--color-text-secondary) -mt-4 mb-2">
+              Each point is a day — X = Fear &amp; Greed, Y = Daily Revenue · Same scale across years for comparison
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {years.map(year => {
+                const pts = byYear[year]
+                return (
+                  <ChartCard key={year} title={year} subtitle={`${pts.length} days`}>
+                    <Plot
+                      data={[{
+                        x: pts.map(p => p.fg),
+                        y: pts.map(p => p.revenue),
+                        text: pts.map(p => p.date),
+                        mode: 'markers',
+                        type: 'scatter',
+                        marker: {
+                          color: pts.map(p => p.fg),
+                          colorscale: [[0, colors.danger], [0.5, colors.warning], [1, colors.success]],
+                          size: 6,
+                          opacity: 0.7,
+                          cmin: 0,
+                          cmax: 100,
+                        },
+                        hovertemplate: 'Date: %{text}<br>F&G: %{x}<br>Revenue: $%{y:,.0f}<extra></extra>',
+                      }]}
+                      layout={{
+                        ...defaultLayout,
+                        height: 350,
+                        xaxis: { ...defaultLayout.xaxis, title: 'Fear & Greed Index', range: [0, 100], type: 'linear' },
+                        yaxis: { ...defaultLayout.yaxis, title: 'Daily Revenue (USD)', range: [0, maxRevenue] },
+                        margin: { ...defaultLayout.margin, t: 10 },
+                      }}
+                      config={defaultConfig}
+                      className="w-full"
+                    />
+                  </ChartCard>
+                )
+              })}
+            </div>
+          </>
+        )
+      })()}
 
       {/* Fear & Greed historical */}
       <ChartCard title="Fear & Greed Index — Historical" subtitle="Crypto market sentiment over time">
