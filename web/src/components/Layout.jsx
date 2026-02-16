@@ -12,7 +12,7 @@ export default function Layout({ children }) {
             </p>
           </div>
           <div className="text-[11px] font-mono text-(--color-ink-muted) uppercase tracking-wider">
-            Data: DeFiLlama · CoinGecko · Coinglass
+Data: DeFiLlama · CoinGecko · Coinglass · Santiment
           </div>
         </div>
       </header>

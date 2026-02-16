@@ -24,12 +24,16 @@ const RiskPremiumTab = lazy(() => import('./components/tabs/RiskPremiumTab'))
 const NetworkEffectsTab = lazy(() => import('./components/tabs/NetworkEffectsTab'))
 const MEVStudyTab = lazy(() => import('./components/tabs/MEVStudyTab'))
 const TokenomicsStudyTab = lazy(() => import('./components/tabs/TokenomicsStudyTab'))
+const StablecoinFlowsTab = lazy(() => import('./components/tabs/StablecoinFlowsTab'))
+const RevenueScoreTab = lazy(() => import('./components/tabs/RevenueScoreTab'))
+const SocialIntelligenceTab = lazy(() => import('./components/tabs/SocialIntelligenceTab'))
 
 const TABS = [
   // Group 1: Revenue Fundamentals
   { id: 'valuations', label: 'Valuations & Multiples', group: 'Revenue Fundamentals' },
   { id: 'sentiment', label: 'Sentiment Disconnect', group: 'Revenue Fundamentals' },
   { id: 'quality', label: 'Revenue Quality', group: 'Revenue Fundamentals' },
+  { id: 'revscore', label: 'Revenue Score', group: 'Revenue Fundamentals' },
   // Group 2: Moats & Strategy
   { id: 'moats', label: 'Moats', group: 'Moats & Strategy' },
   { id: 'future', label: 'Future Leaders', group: 'Moats & Strategy' },
@@ -38,11 +42,13 @@ const TABS = [
   { id: 'structure', label: 'Market Structure', group: 'Market Intelligence' },
   { id: 'derivatives', label: 'Derivatives Intelligence', group: 'Market Intelligence' },
   { id: 'yield', label: 'Yield Analysis', group: 'Market Intelligence' },
+  { id: 'social', label: 'Social Intelligence', group: 'Market Intelligence' },
   // Group 4: Macro & On-Chain
   { id: 'macro', label: 'Macro Correlations', group: 'Macro & On-Chain' },
   { id: 'onchain', label: 'On-Chain Economy', group: 'Macro & On-Chain' },
   { id: 'developer', label: 'Developer Activity', group: 'Macro & On-Chain' },
   { id: 'onchainmetrics', label: 'On-Chain Metrics', group: 'Macro & On-Chain' },
+  { id: 'stablecoins', label: 'Stablecoin Flows', group: 'Macro & On-Chain' },
   // Group 5: Research Studies
   { id: 'powerlaw', label: 'Power Laws', group: 'Research Studies' },
   { id: 'riskpremium', label: 'Risk Premium', group: 'Research Studies' },
@@ -55,6 +61,7 @@ const TAB_COMPONENTS = {
   valuations: ValuationsTab,
   sentiment: SentimentTab,
   quality: RevenueQualityTab,
+  revscore: RevenueScoreTab,
   moats: MoatsTab,
   future: FutureLeadersTab,
   efficiency: CapitalEfficiencyTab,
@@ -62,6 +69,7 @@ const TAB_COMPONENTS = {
   structure: MarketStructureTab,
   derivatives: DerivativesTab,
   yield: YieldAnalysisTab,
+  social: SocialIntelligenceTab,
   riskpremium: RiskPremiumTab,
   macro: MacroTab,
   onchain: OnChainEconomyTab,
@@ -70,6 +78,7 @@ const TAB_COMPONENTS = {
   powerlaw: PowerLawTab,
   networkeffects: NetworkEffectsTab,
   mevstudy: MEVStudyTab,
+  stablecoins: StablecoinFlowsTab,
 }
 
 export default function App() {

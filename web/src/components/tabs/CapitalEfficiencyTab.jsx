@@ -6,6 +6,7 @@ import NarrativeBox from '../NarrativeBox'
 import LoadingSpinner from '../LoadingSpinner'
 import { formatCurrency, formatPercent, categorizeSector } from '../../utils/helpers'
 import { fetchAllProtocols, fetchFeesOverview, fetchProtocolFees } from '../../services/api'
+import { fetchOptionsOI, fetchOptionsVolume } from '../../services/coinglass'
 
 export default function CapitalEfficiencyTab() {
   const [data, setData] = useState(null)
@@ -56,12 +57,29 @@ export default function CapitalEfficiencyTab() {
         }
       })
 
+      // Phase 3: Yield pools and options data for enrichment charts
+      setLoadingPhase('Fetching yield pools and options data...')
+      const [poolsRes, btcOptionsOIRes, ethOptionsOIRes, btcOptionsVolRes, ethOptionsVolRes] = await Promise.allSettled([
+        fetch('https://api.llama.fi/pools').then(r => r.ok ? r.json() : []),
+        fetchOptionsOI('BTC', '4h').catch(() => null),
+        fetchOptionsOI('ETH', '4h').catch(() => null),
+        fetchOptionsVolume('BTC', '4h').catch(() => null),
+        fetchOptionsVolume('ETH', '4h').catch(() => null),
+      ])
+
       return {
         protocols,
         fees,
         markets,
         marketCapLookup,
         historicalData,
+        yieldPools: poolsRes.status === 'fulfilled' ? poolsRes.value : [],
+        optionsData: {
+          btcOI: btcOptionsOIRes.status === 'fulfilled' ? btcOptionsOIRes.value : null,
+          ethOI: ethOptionsOIRes.status === 'fulfilled' ? ethOptionsOIRes.value : null,
+          btcVol: btcOptionsVolRes.status === 'fulfilled' ? btcOptionsVolRes.value : null,
+          ethVol: ethOptionsVolRes.status === 'fulfilled' ? ethOptionsVolRes.value : null,
+        },
       }
     }
 
@@ -75,7 +93,7 @@ export default function CapitalEfficiencyTab() {
   const processedData = useMemo(() => {
     if (!data) return null
 
-    const { protocols, fees, marketCapLookup, historicalData } = data
+    const { protocols, fees, marketCapLookup, historicalData, yieldPools, optionsData } = data
     const feesProtocols = fees?.protocols || []
 
     // Merge protocols with fees data
@@ -154,6 +172,49 @@ export default function CapitalEfficiencyTab() {
     // Process historical efficiency trends
     const historicalTrends = processHistoricalTrends(historicalData, protocols)
 
+    // === Yield Pool Efficiency Data ===
+    const topPools = (Array.isArray(yieldPools) ? yieldPools : [])
+      .filter(p => p.tvlUsd > 1e6 && p.apy > 0 && p.apy < 200)
+      .sort((a, b) => b.tvlUsd - a.tvlUsd)
+      .slice(0, 100)
+    
+    const poolChains = [...new Set(topPools.map(p => p.chain))]
+    const poolChainColorMap = {}
+    poolChains.forEach((c, i) => { poolChainColorMap[c] = colors.palette[i % colors.palette.length] })
+
+    // === Chain Efficiency Leaderboard ===
+    const chainStats = {}
+    mergedProtocols.forEach(p => {
+      const chains = Array.isArray(protocols.find(pr => pr.slug === p.slug)?.chains)
+        ? protocols.find(pr => pr.slug === p.slug).chains
+        : [protocols.find(pr => pr.slug === p.slug)?.chain || 'Other']
+      chains.forEach(chain => {
+        if (!chain) return
+        if (!chainStats[chain]) chainStats[chain] = { totalRevenue: 0, totalTvl: 0, count: 0 }
+        chainStats[chain].totalRevenue += p.annualizedRevenue / chains.length
+        chainStats[chain].totalTvl += p.tvl / chains.length
+        chainStats[chain].count += 1
+      })
+    })
+    const chainEfficiency = Object.entries(chainStats)
+      .filter(([_, s]) => s.totalTvl > 1e7 && s.count >= 3)
+      .map(([chain, s]) => ({
+        chain,
+        efficiency: s.totalTvl > 0 ? (s.totalRevenue / s.totalTvl) * 100 : 0,
+        totalRevenue: s.totalRevenue,
+        totalTvl: s.totalTvl,
+        count: s.count,
+      }))
+      .sort((a, b) => b.efficiency - a.efficiency)
+      .slice(0, 15)
+
+    // === Options Data ===
+    const btcLatestOI = optionsData?.btcOI?.data?.slice(-1)[0]?.openInterest || 0
+    const ethLatestOI = optionsData?.ethOI?.data?.slice(-1)[0]?.openInterest || 0
+    const btcLatestVol = optionsData?.btcVol?.data?.slice(-1)[0]?.volume || 0
+    const ethLatestVol = optionsData?.ethVol?.data?.slice(-1)[0]?.volume || 0
+    const hasOptionsData = btcLatestOI > 0 || ethLatestOI > 0
+
     return {
       mergedProtocols,
       medianEfficiency,
@@ -162,6 +223,11 @@ export default function CapitalEfficiencyTab() {
       sectorEfficiency,
       historicalTrends,
       totalAnalyzed: mergedProtocols.length,
+      topPools,
+      poolChains,
+      poolChainColorMap,
+      chainEfficiency,
+      optionsSummary: { btcLatestOI, ethLatestOI, btcLatestVol, ethLatestVol, hasOptionsData },
     }
   }, [data])
 
@@ -177,6 +243,11 @@ export default function CapitalEfficiencyTab() {
     sectorEfficiency,
     historicalTrends,
     totalAnalyzed,
+    topPools,
+    poolChains,
+    poolChainColorMap,
+    chainEfficiency,
+    optionsSummary,
   } = processedData
 
   // =======================
@@ -551,6 +622,126 @@ export default function CapitalEfficiencyTab() {
           </table>
         </div>
       </ChartCard>
+
+      {/* Chart 6: Yield Pool Efficiency Scatter */}
+      {topPools.length > 0 && (
+        <ChartCard
+          title="Yield Pool Efficiency Frontier"
+          subtitle="X = Pool TVL (log), Y = APY · The yield-TVL tradeoff — larger pools typically offer lower yields (more efficient market)"
+        >
+          <Plot
+            data={poolChains.slice(0, 8).map(chain => {
+              const pts = topPools.filter(p => p.chain === chain)
+              return {
+                x: pts.map(p => p.tvlUsd),
+                y: pts.map(p => p.apy),
+                text: pts.map(p => `${p.symbol}<br>${p.project}<br>Chain: ${p.chain}<br>TVL: ${formatCurrency(p.tvlUsd)}<br>APY: ${p.apy.toFixed(2)}%`),
+                mode: 'markers',
+                type: 'scatter',
+                name: chain,
+                marker: {
+                  color: poolChainColorMap[chain],
+                  size: 8,
+                  opacity: 0.7,
+                  line: { width: 1, color: '#FFF' },
+                },
+                hovertemplate: '%{text}<extra></extra>',
+              }
+            })}
+            layout={{
+              ...defaultLayout,
+              height: 450,
+              xaxis: { ...defaultLayout.xaxis, title: 'Pool TVL (USD)', type: 'log' },
+              yaxis: { ...defaultLayout.yaxis, title: 'APY (%)', range: [0, 50] },
+              legend: { ...defaultLayout.legend, orientation: 'h', y: -0.15 },
+            }}
+            config={defaultConfig}
+            className="w-full"
+          />
+        </ChartCard>
+      )}
+
+      {/* Chart 7: Options Market Sizing */}
+      {optionsSummary.hasOptionsData && (
+        <ChartCard
+          title="Options Market — BTC vs ETH"
+          subtitle="Options OI and volume from Coinglass · Options represent more capital-efficient hedging than perpetuals"
+        >
+          <Plot
+            data={[
+              {
+                x: ['BTC', 'ETH'],
+                y: [optionsSummary.btcLatestOI, optionsSummary.ethLatestOI],
+                type: 'bar',
+                name: 'Open Interest',
+                marker: { color: colors.primary },
+                hovertemplate: '%{x} Options OI: $%{y:,.0f}<extra></extra>',
+              },
+              {
+                x: ['BTC', 'ETH'],
+                y: [optionsSummary.btcLatestVol, optionsSummary.ethLatestVol],
+                type: 'bar',
+                name: 'Volume',
+                marker: { color: colors.success },
+                hovertemplate: '%{x} Options Volume: $%{y:,.0f}<extra></extra>',
+              },
+            ]}
+            layout={{
+              ...defaultLayout,
+              height: 350,
+              barmode: 'group',
+              xaxis: { ...defaultLayout.xaxis, type: 'category' },
+              yaxis: { ...defaultLayout.yaxis, title: 'USD' },
+              legend: { ...defaultLayout.legend, orientation: 'h', y: 1.08 },
+            }}
+            config={defaultConfig}
+            className="w-full"
+          />
+        </ChartCard>
+      )}
+
+      {/* Chart 8: Chain Efficiency Leaderboard */}
+      {chainEfficiency.length > 0 && (
+        <ChartCard
+          title="Capital Efficiency by Chain"
+          subtitle="Aggregate Revenue/TVL ratio per chain · Which L1/L2s generate the most revenue per dollar locked"
+          csvData={{
+            filename: 'chain-capital-efficiency',
+            headers: ['Chain', 'Efficiency%', 'AnnualizedRevenue', 'TotalTVL', 'ProtocolCount'],
+            rows: chainEfficiency.map(c => [c.chain, c.efficiency.toFixed(2), c.totalRevenue, c.totalTvl, c.count]),
+          }}
+        >
+          <Plot
+            data={[{
+              y: chainEfficiency.map(c => c.chain),
+              x: chainEfficiency.map(c => c.efficiency),
+              type: 'bar',
+              orientation: 'h',
+              marker: {
+                color: chainEfficiency.map(c =>
+                  c.efficiency > 10 ? colors.success :
+                  c.efficiency > 5 ? colors.primary :
+                  c.efficiency > 2 ? colors.warning :
+                  colors.slate
+                ),
+              },
+              text: chainEfficiency.map(c => `${c.efficiency.toFixed(1)}% (${c.count} protocols)`),
+              textposition: 'outside',
+              textfont: { size: 10, color: '#7A7A7A' },
+              hovertemplate: '%{y}<br>Efficiency: %{x:.2f}%<extra></extra>',
+            }]}
+            layout={{
+              ...defaultLayout,
+              height: Math.max(350, chainEfficiency.length * 28),
+              xaxis: { ...defaultLayout.xaxis, title: 'Capital Efficiency (Revenue/TVL %)' },
+              yaxis: { ...defaultLayout.yaxis, autorange: 'reversed' },
+              margin: { ...defaultLayout.margin, l: 100, r: 140 },
+            }}
+            config={defaultConfig}
+            className="w-full"
+          />
+        </ChartCard>
+      )}
 
       {/* Narrative */}
       <NarrativeBox title="Capital Efficiency: The Most Underrated DeFi Metric">
