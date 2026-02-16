@@ -144,7 +144,8 @@ export default function RevenueQualityTab() {
       </div>
 
       {top20.length > 0 && (
-        <ChartCard title="Fees vs Revenue — Take Rate" subtitle="Top 20 protocols · Fees (paid by users) vs Revenue (kept by protocol)">
+        <ChartCard title="Fees vs Revenue — Take Rate" subtitle="Top 20 protocols · Fees (paid by users) vs Revenue (kept by protocol)"
+          csvData={{ filename: 'fees-vs-revenue-take-rate', headers: ['Protocol','Fees24h','Revenue24h','TakeRate%','Sector'], rows: top20.map(p => [p.name, p.fees, p.revenue, p.takeRate.toFixed(1), p.sector]) }}>
           <Plot
             data={[
               { x: top20.map(p => p.name), y: top20.map(p => p.fees), type: 'bar', name: 'Fees', marker: { color: colors.palette[0] }, hovertemplate: '%{x}<br>Fees: $%{y:,.0f}<extra></extra>' },
@@ -162,7 +163,8 @@ export default function RevenueQualityTab() {
       )}
 
       {protocolsWithTakeRate.length > 0 && (
-        <ChartCard title="Take Rate Distribution" subtitle={`${protocolsWithTakeRate.filter(p => p.takeRate > 0 && p.takeRate <= 100).length} protocols — how much of user-paid fees does the protocol keep?`}>
+        <ChartCard title="Take Rate Distribution" subtitle={`${protocolsWithTakeRate.filter(p => p.takeRate > 0 && p.takeRate <= 100).length} protocols — how much of user-paid fees does the protocol keep?`}
+          csvData={{ filename: 'take-rate-distribution', headers: ['Protocol','Fees24h','Revenue24h','TakeRate%','Sector'], rows: protocolsWithTakeRate.filter(p => p.takeRate > 0 && p.takeRate <= 100).map(p => [p.name, p.fees, p.revenue, p.takeRate.toFixed(1), p.sector]) }}>
           <Plot
             data={[{
               x: protocolsWithTakeRate.filter(p => p.takeRate > 0 && p.takeRate <= 100).map(p => p.takeRate),
@@ -181,7 +183,8 @@ export default function RevenueQualityTab() {
         </ChartCard>
       )}
 
-      <ChartCard title="Revenue Market Share by Sector" subtitle={`${sortedSectors.length} sectors — ${feesProtocols.length.toLocaleString()} protocols`}>
+      <ChartCard title="Revenue Market Share by Sector" subtitle={`${sortedSectors.length} sectors — ${feesProtocols.length.toLocaleString()} protocols`}
+        csvData={{ filename: 'sector-revenue-share', headers: ['Sector','Revenue24h','MarketShare%'], rows: sortedSectors.map(s => [s[0], s[1], ((s[1] / totalSectorRevenue) * 100).toFixed(1)]) }}>
         <Plot
           data={[{
             x: sortedSectors.map(s => s[0]),
@@ -209,7 +212,8 @@ export default function RevenueQualityTab() {
         </ChartCard>
       )}
 
-      <ChartCard title="Stablecoin Market Cap Rankings" subtitle="Top 10 stablecoins by circulating supply">
+      <ChartCard title="Stablecoin Market Cap Rankings" subtitle="Top 10 stablecoins by circulating supply"
+        csvData={{ filename: 'stablecoin-rankings', headers: ['Stablecoin','MarketCap'], rows: top10Stablecoins.map(s => [s.name, s.circulating?.peggedUSD || 0]) }}>
         <Plot
           data={[{
             x: top10Stablecoins.map(s => s.name),

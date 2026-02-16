@@ -184,7 +184,8 @@ export default function MoatsTab() {
       </div>
 
       {/* Top 50 Protocol Table */}
-      <ChartCard title="Top 50 Protocols by Moat Score" subtitle="Dynamically scored: TVL dominance (25) + Revenue consistency (25) + Multi-chain (25) + Capital efficiency (25)">
+      <ChartCard title="Top 50 Protocols by Moat Score" subtitle="Dynamically scored: TVL dominance (25) + Revenue consistency (25) + Multi-chain (25) + Capital efficiency (25)"
+        csvData={{ filename: 'moat-scores', headers: ['Rank','Protocol','TVL','Revenue24h','MCap','Chains','Sector','MoatScore','Rating'], rows: top50.map((p, i) => [i+1, p.name, p.tvl, p.revenue24h, p.mcap, p.chains, p.sector, p.moatScore, p.moatRating]) }}>
         <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-white">
@@ -220,7 +221,8 @@ export default function MoatsTab() {
       </ChartCard>
 
       {/* TVL vs Revenue Scatter — all protocols, colored by moat */}
-      <ChartCard title="TVL vs Revenue Scatter" subtitle={`${scatterBg.length} protocols · Top 50 by moat colored · Gray = unscored · Log scale`}>
+      <ChartCard title="TVL vs Revenue Scatter" subtitle={`${scatterBg.length} protocols · Top 50 by moat colored · Gray = unscored · Log scale`}
+        csvData={{ filename: 'tvl-vs-revenue', headers: ['Protocol','TVL','Revenue24h','Sector','MoatScore','Rating'], rows: scored.filter(p => p.tvl > 1e6).map(p => [p.name, p.tvl, p.revenue24h, p.sector, p.moatScore, p.moatRating]) }}>
         <Plot
           data={[
             {
@@ -254,7 +256,8 @@ export default function MoatsTab() {
 
       {/* Sector Average Moat Score */}
       {sectorAvgMoat.length > 0 && (
-        <ChartCard title="Sector Moat Strength" subtitle="Average moat score by sector (min 3 protocols)">
+        <ChartCard title="Sector Moat Strength" subtitle="Average moat score by sector (min 3 protocols)"
+          csvData={{ filename: 'sector-moat-strength', headers: ['Sector','AvgScore','ProtocolCount','TotalRevenue24h'], rows: sectorAvgMoat.map(s => [s.sector, s.avgScore.toFixed(1), s.count, s.totalRev]) }}>
           <Plot
             data={[{
               x: sectorAvgMoat.map(s => s.sector),
@@ -272,7 +275,8 @@ export default function MoatsTab() {
       )}
 
       {/* Moat Score Distribution */}
-      <ChartCard title="Moat Score Distribution" subtitle={`${totalAnalyzed} protocols scored`}>
+      <ChartCard title="Moat Score Distribution" subtitle={`${totalAnalyzed} protocols scored`}
+        csvData={{ filename: 'moat-distribution', headers: ['Protocol','MoatScore','Rating','Sector','TVL','Revenue24h'], rows: scored.map(p => [p.name, p.moatScore, p.moatRating, p.sector, p.tvl, p.revenue24h]) }}>
         <Plot
           data={[{
             x: scored.map(p => p.moatScore),

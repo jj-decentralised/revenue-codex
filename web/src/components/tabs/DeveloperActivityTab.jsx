@@ -99,7 +99,8 @@ export default function DeveloperActivityTab() {
       </div>
 
       {/* Developer Activity Rankings */}
-      <ChartCard title="Developer Activity Rankings" subtitle="GitHub commits in the last 4 weeks — shows which protocols are shipping the most code">
+      <ChartCard title="Developer Activity Rankings" subtitle="GitHub commits in the last 4 weeks — shows which protocols are shipping the most code"
+        csvData={{ filename: 'developer-activity', headers: ['Protocol','Commits4wk'], rows: byCommits.map(p => [p.name, p.commits4w]) }}>
         <Plot
           data={[{
             x: byCommits.map(p => p.name),
@@ -116,7 +117,8 @@ export default function DeveloperActivityTab() {
 
       {/* Developer Efficiency Scatter */}
       {withRevenue.length > 0 && (
-        <ChartCard title="Developer Efficiency Scatter" subtitle="X = Commits (4wk), Y = Protocol Revenue (24h) — reveals revenue per unit of development effort">
+        <ChartCard title="Developer Efficiency Scatter" subtitle="X = Commits (4wk), Y = Protocol Revenue (24h) — reveals revenue per unit of development effort"
+          csvData={{ filename: 'developer-efficiency', headers: ['Protocol','Commits4wk','Revenue24h'], rows: withRevenue.map(p => [p.name, p.commits4w, p.revenue24h]) }}>
           <Plot
             data={[{
               x: withRevenue.map(p => p.commits4w),
@@ -148,7 +150,8 @@ export default function DeveloperActivityTab() {
       )}
 
       {/* Community Metrics - Grouped Bar */}
-      <ChartCard title="Community Metrics" subtitle="Twitter followers and Reddit subscribers — shows social capital">
+      <ChartCard title="Community Metrics" subtitle="Twitter followers and Reddit subscribers — shows social capital"
+        csvData={{ filename: 'community-metrics', headers: ['Protocol','TwitterFollowers','RedditSubscribers'], rows: projectData.map(p => [p.name, p.twitterFollowers, p.redditSubscribers]) }}>
         <Plot
           data={[
             {
@@ -182,7 +185,8 @@ export default function DeveloperActivityTab() {
       </ChartCard>
 
       {/* Code Quality Indicators */}
-      <ChartCard title="Code Quality Indicators" subtitle="Issue close rate (closed / total) — higher rate indicates more responsive development team">
+      <ChartCard title="Code Quality Indicators" subtitle="Issue close rate (closed / total) — higher rate indicates more responsive development team"
+        csvData={{ filename: 'code-quality', headers: ['Protocol','IssueCloseRate%','TotalIssues'], rows: projectData.filter(p => p.totalIssues > 0).map(p => [p.name, p.issueCloseRate.toFixed(1), p.totalIssues]) }}>
         <Plot
           data={[{
             x: projectData.filter(p => p.totalIssues > 0).map(p => p.name),
@@ -218,7 +222,8 @@ export default function DeveloperActivityTab() {
 
       {/* GitHub Stars vs Revenue */}
       {byStars.length > 0 && (
-        <ChartCard title="GitHub Stars vs Revenue" subtitle="Do popular open-source projects generate more revenue?">
+        <ChartCard title="GitHub Stars vs Revenue" subtitle="Do popular open-source projects generate more revenue?"
+          csvData={{ filename: 'github-stars-revenue', headers: ['Protocol','Stars','Revenue24h','Commits4wk'], rows: byStars.map(p => [p.name, p.stars, p.revenue24h, p.commits4w]) }}>
           <Plot
             data={[{
               x: byStars.map(p => p.stars),

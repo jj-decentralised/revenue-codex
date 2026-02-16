@@ -285,6 +285,7 @@ export default function DerivativesTab() {
       <ChartCard
         title="Funding Rate Heatmap"
         subtitle="Multi-coin funding rates — green: negative (shorts pay longs), red: high positive (longs pay shorts)"
+        csvData={{ filename: 'funding-rates', headers: ['Symbol','AvgFundingRate%'], rows: fundingRates.map(d => [d.symbol, d.avgRate?.toFixed(4)]) }}
       >
         <Plot
           data={[{
@@ -324,7 +325,8 @@ export default function DerivativesTab() {
       </ChartCard>
 
       {/* Open Interest by Coin */}
-      <ChartCard title="Open Interest by Coin" subtitle="Current OI for tracked coins">
+      <ChartCard title="Open Interest by Coin" subtitle="Current OI for tracked coins"
+        csvData={{ filename: 'open-interest', headers: ['Symbol','OpenInterest'], rows: oiByCoins.map(d => [d.symbol, d.oi]) }}>
         <Plot
           data={[{
             x: oiByCoins.map(d => d.symbol),
@@ -353,7 +355,8 @@ export default function DerivativesTab() {
 
       {/* OI by Exchange (BTC) */}
       {oiByExchange.length > 0 && (
-        <ChartCard title="BTC OI by Exchange" subtitle="Exchange market share of Bitcoin open interest">
+        <ChartCard title="BTC OI by Exchange" subtitle="Exchange market share of Bitcoin open interest"
+          csvData={{ filename: 'btc-oi-by-exchange', headers: ['Exchange','OpenInterest'], rows: oiByExchange.map(d => [d.exchangeName || d.exchange, d.openInterest]) }}>
           <Plot
             data={[{
               labels: oiByExchange.map(d => d.exchangeName || d.exchange),
@@ -379,7 +382,8 @@ export default function DerivativesTab() {
       )}
 
       {/* Liquidation Bars */}
-      <ChartCard title="Liquidation Analysis" subtitle="24h liquidations by coin — Longs (green) vs Shorts (red)">
+      <ChartCard title="Liquidation Analysis" subtitle="24h liquidations by coin — Longs (green) vs Shorts (red)"
+        csvData={{ filename: 'liquidations', headers: ['Symbol','LongLiquidation','ShortLiquidation'], rows: topLiquidated.map(d => [d.symbol, d.longLiquidationUsd, d.shortLiquidationUsd]) }}>
         <Plot
           data={[
             {
@@ -443,7 +447,8 @@ export default function DerivativesTab() {
 
       {/* BTC ETF Daily Flows */}
       {etfFlows.length > 0 && (
-        <ChartCard title="Bitcoin ETF Daily Flows" subtitle="Net inflows/outflows — green: inflow, red: outflow">
+        <ChartCard title="Bitcoin ETF Daily Flows" subtitle="Net inflows/outflows — green: inflow, red: outflow"
+          csvData={{ filename: 'btc-etf-flows', headers: ['Date','NetFlow_USD_M'], rows: etfFlows.map(d => [d.date, d.netflow]) }}>
           <Plot
             data={[{
               x: etfFlows.map(d => d.date),
@@ -473,7 +478,8 @@ export default function DerivativesTab() {
 
       {/* DeFi Derivatives Revenue */}
       {topDerivativesProtocols.length > 0 && (
-        <ChartCard title="DeFi Derivatives Protocol Revenue" subtitle="Top protocols by daily revenue (DeFiLlama)">
+        <ChartCard title="DeFi Derivatives Protocol Revenue" subtitle="Top protocols by daily revenue (DeFiLlama)"
+          csvData={{ filename: 'defi-derivatives-revenue', headers: ['Protocol','DailyRevenue'], rows: topDerivativesProtocols.map(p => [p.name, p.dailyRevenue]) }}>
           <Plot
             data={[{
               x: topDerivativesProtocols.map(p => p.name),
@@ -503,7 +509,8 @@ export default function DerivativesTab() {
 
       {/* Options Volume */}
       {topOptionsProtocols.length > 0 && (
-        <ChartCard title="DeFi Options Protocol Volume" subtitle="Top options protocols by daily volume (DeFiLlama)">
+        <ChartCard title="DeFi Options Protocol Volume" subtitle="Top options protocols by daily volume (DeFiLlama)"
+          csvData={{ filename: 'defi-options-volume', headers: ['Protocol','DailyVolume'], rows: topOptionsProtocols.map(p => [p.name, p.dailyVolume]) }}>
           <Plot
             data={[{
               x: topOptionsProtocols.map(p => p.name),

@@ -231,7 +231,8 @@ export default function TokenomicsStudyTab() {
       </div>
 
       {/* 1. Value Accrual Model Classification */}
-      <ChartCard title="Value Accrual Model Classification" subtitle="Total annualized revenue by token model type — how protocols capture value">
+      <ChartCard title="Value Accrual Model Classification" subtitle="Total annualized revenue by token model type — how protocols capture value"
+        csvData={{ filename: 'value-accrual-models', headers: ['Model','AnnualizedRevenue','ProtocolCount'], rows: modelTypes.map(m => [m, modelRevenue[m], modelCount[m]]) }}>
         <Plot
           data={[
             {
@@ -256,7 +257,8 @@ export default function TokenomicsStudyTab() {
       </ChartCard>
 
       {/* 2. P/E by Token Model - Box plot style */}
-      <ChartCard title="P/E by Token Model" subtitle="Do fee-burn tokens trade at different multiples than staking tokens? · Diamond = median">
+      <ChartCard title="P/E by Token Model" subtitle="Do fee-burn tokens trade at different multiples than staking tokens? · Diamond = median"
+        csvData={{ filename: 'pe-by-model', headers: ['Model','Protocol','PE_Ratio'], rows: modelPEStats.flatMap(s => s.protocols.map(p => [s.model, p.name, p.pe.toFixed(1)])) }}>
         <Plot
           data={[
             // Individual protocol dots
@@ -298,7 +300,8 @@ export default function TokenomicsStudyTab() {
       </ChartCard>
 
       {/* 3. Revenue Capture Efficiency */}
-      <ChartCard title="Revenue Capture Efficiency" subtitle="X = Total fees, Y = % captured by token · Protocols with high capture = better tokenomics">
+      <ChartCard title="Revenue Capture Efficiency" subtitle="X = Total fees, Y = % captured by token · Protocols with high capture = better tokenomics"
+        csvData={{ filename: 'revenue-capture', headers: ['Protocol','Model','AnnualizedRevenue','CaptureRate%','MCap'], rows: captureScatter.map(p => [p.name, p.tokenModel, p.annualizedRevenue, (p.captureRate*100).toFixed(1), p.mcap]) }}>
         <Plot
           data={modelTypes.filter(m => m !== 'Other').map(model => {
             const pts = captureScatter.filter(p => p.tokenModel === model)
@@ -331,7 +334,8 @@ export default function TokenomicsStudyTab() {
       </ChartCard>
 
       {/* 4. Token Velocity Problem */}
-      <ChartCard title="Token Velocity Problem" subtitle="High velocity + low yield = tokens dumped · Low velocity + high yield = tokens held for yield">
+      <ChartCard title="Token Velocity Problem" subtitle="High velocity + low yield = tokens dumped · Low velocity + high yield = tokens held for yield"
+        csvData={{ filename: 'token-velocity', headers: ['Protocol','Model','Velocity','RevenueYield%'], rows: velocityScatter.map(p => [p.name, p.tokenModel, p.velocity.toFixed(1), p.revenueYield.toFixed(2)]) }}>
         <Plot
           data={modelTypes.filter(m => m !== 'Other').map(model => {
             const pts = velocityScatter.filter(p => p.tokenModel === model)
@@ -372,7 +376,8 @@ export default function TokenomicsStudyTab() {
       </ChartCard>
 
       {/* 5. Dilution-Adjusted Returns */}
-      <ChartCard title="Dilution-Adjusted Returns" subtitle="Staking APY MINUS inflation = real yield · Positive = value creation, Negative = dilutive">
+      <ChartCard title="Dilution-Adjusted Returns" subtitle="Staking APY MINUS inflation = real yield · Positive = value creation, Negative = dilutive"
+        csvData={{ filename: 'dilution-adjusted-returns', headers: ['Protocol','StakingAPY%','Inflation%','RealYield%'], rows: stakingTokens.map(t => [t.name, t.stakingApy.toFixed(1), t.inflation.toFixed(1), t.realYield.toFixed(1)]) }}>
         <Plot
           data={[
             {
@@ -401,7 +406,8 @@ export default function TokenomicsStudyTab() {
       </ChartCard>
 
       {/* 6. Market Cap vs Revenue by Model */}
-      <ChartCard title="Market Cap vs Revenue by Model" subtitle="Different colors/shapes for token models · Test if market prices models differently">
+      <ChartCard title="Market Cap vs Revenue by Model" subtitle="Different colors/shapes for token models · Test if market prices models differently"
+        csvData={{ filename: 'mcap-vs-revenue-model', headers: ['Protocol','Model','AnnualizedRevenue','MCap','TVL','PS_Ratio'], rows: mcapRevenueScatter.map(p => [p.name, p.tokenModel, p.annualizedRevenue, p.mcap, p.tvl, p.psRatio?.toFixed(1)]) }}>
         <Plot
           data={modelTypes.filter(m => m !== 'Other').map(model => {
             const pts = mcapRevenueScatter.filter(p => p.tokenModel === model)

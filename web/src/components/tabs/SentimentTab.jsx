@@ -7,6 +7,7 @@ import LoadingSpinner from '../LoadingSpinner'
 import { fetchSentimentData } from '../../services/api'
 import { formatCurrency, formatPercent, percentile } from '../../utils/helpers'
 import { sentimentNarrative } from '../../data/narratives'
+import { downloadCSV } from '../../utils/csv'
 
 export default function SentimentTab() {
   const [data, setData] = useState(null)
@@ -121,7 +122,8 @@ export default function SentimentTab() {
       )}
 
       {/* Dual-axis: Revenue bars + Fear & Greed line */}
-      <ChartCard title="Revenue vs Sentiment" subtitle="Daily revenue (bars) overlaid with Fear & Greed Index (line)">
+      <ChartCard title="Revenue vs Sentiment" subtitle="Daily revenue (bars) overlaid with Fear & Greed Index (line)"
+        csvData={{ filename: 'revenue-vs-sentiment', headers: ['Date','DailyRevenue','FearGreedIndex'], rows: scatterPoints.map(p => [p.date, p.revenue, p.fg]) }}>
         <Plot
           data={[
             {
@@ -205,7 +207,17 @@ export default function SentimentTab() {
 
             {/* Yearly Summary Table */}
             <div className="bg-white border border-(--color-border) rounded-lg overflow-hidden">
-              <div className="grid grid-cols-5 text-xs font-semibold text-(--color-text-secondary) bg-gray-50 px-4 py-2 border-b border-(--color-border)">
+              <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-(--color-border)">
+                <span className="text-xs font-semibold text-(--color-text-secondary)">Yearly Summary</span>
+                <button
+                  onClick={() => downloadCSV('yearly-revenue-summary', ['Year','Days','AvgDailyRevenue','TotalRevenue','AvgFearGreed'], yearStats.map(s => [s.year, s.days, s.avgRev, s.totalRev, s.avgFG.toFixed(1)]))}
+                  className="shrink-0 text-xs text-(--color-text-secondary) hover:text-(--color-primary) cursor-pointer flex items-center gap-1 px-2 py-0.5 rounded border border-(--color-border) hover:border-(--color-primary) transition-colors"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                  CSV
+                </button>
+              </div>
+              <div className="grid grid-cols-5 text-xs font-semibold text-(--color-text-secondary) px-4 py-2 border-b border-(--color-border)">
                 <span>Year</span>
                 <span className="text-right">Days</span>
                 <span className="text-right">Avg Daily Revenue</span>
@@ -228,7 +240,8 @@ export default function SentimentTab() {
                 const pts = byYear[year]
                 const stats = yearStats.find(s => s.year === year)
                 return (
-                  <ChartCard key={year} title={year} subtitle={`${pts.length} days · Avg: ${formatCurrency(stats.avgRev)}/day`}>
+                  <ChartCard key={year} title={year} subtitle={`${pts.length} days · Avg: ${formatCurrency(stats.avgRev)}/day`}
+                    csvData={{ filename: `sentiment-scatter-${year}`, headers: ['Date','FearGreed','DailyRevenue'], rows: pts.map(p => [p.date, p.fg, p.revenue]) }}>
                     <Plot
                       data={[
                         {
@@ -279,7 +292,8 @@ export default function SentimentTab() {
       })()}
 
       {/* Fear & Greed historical */}
-      <ChartCard title="Fear & Greed Index — Historical" subtitle="Crypto market sentiment over time">
+      <ChartCard title="Fear & Greed Index — Historical" subtitle="Crypto market sentiment over time"
+        csvData={{ filename: 'fear-greed-historical', headers: ['Date','FearGreedIndex'], rows: fgDates.map((d, i) => [d, fgValues[i]]) }}>
         <Plot
           data={[{
             x: fgDates,

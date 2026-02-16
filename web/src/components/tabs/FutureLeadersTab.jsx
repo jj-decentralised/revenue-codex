@@ -123,7 +123,8 @@ export default function FutureLeadersTab() {
       </div>
 
       {/* RWA Protocols Bar Chart */}
-      <ChartCard title="Top RWA Protocols by TVL" subtitle="Real World Asset protocols — ranked by Total Value Locked">
+      <ChartCard title="Top RWA Protocols by TVL" subtitle="Real World Asset protocols — ranked by Total Value Locked"
+        csvData={{ filename: 'rwa-protocols', headers: ['Protocol','TVL'], rows: rwaProtocols.map(p => [p.name, p.tvl]) }}>
         <Plot
           data={[{
             x: rwaProtocols.map(p => p.name),
@@ -144,7 +145,8 @@ export default function FutureLeadersTab() {
       </ChartCard>
 
       {/* RWA 10x Simulator */}
-      <ChartCard title="RWA Growth Simulator" subtitle="Project RWA protocol revenue at different TVL growth multiples">
+      <ChartCard title="RWA Growth Simulator" subtitle="Project RWA protocol revenue at different TVL growth multiples"
+        csvData={{ filename: `rwa-simulator-${rwaMultiplier}x`, headers: ['Protocol','TVL','CurrentRevenue24h','ProjectedRevenue24h','Multiplier'], rows: projectedRevenue.map(p => [p.name, p.tvl, p.revenue24h, p.projectedRevenue, rwaMultiplier]) }}>
         <div className="mb-4 flex items-center gap-4">
           <label className="text-sm text-(--color-text-secondary)">TVL Multiplier:</label>
           <input
@@ -199,7 +201,8 @@ export default function FutureLeadersTab() {
       </ChartCard>
 
       {/* Sector Growth Scatter */}
-      <ChartCard title="Sector Growth Scatter" subtitle="TVL vs 24h Revenue — RWA and AI/Compute highlighted">
+      <ChartCard title="Sector Growth Scatter" subtitle="TVL vs 24h Revenue — RWA and AI/Compute highlighted"
+        csvData={{ filename: 'sector-growth-scatter', headers: ['Protocol','TVL','Revenue24h','Category','Sector'], rows: scatterData.map(p => [p.name, p.tvl, p.revenue24h, p.category, p.sector]) }}>
         <Plot
           data={[
             {

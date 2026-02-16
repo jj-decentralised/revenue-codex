@@ -318,7 +318,8 @@ export default function MarketStructureTab() {
       </div>
 
       {/* Exchange Trust Score vs Volume Scatter */}
-      <ChartCard title="Exchange Trust Score vs Volume" subtitle="X = Trust Score · Y = 24h Volume · Size = Number of Trading Pairs">
+      <ChartCard title="Exchange Trust Score vs Volume" subtitle="X = Trust Score · Y = 24h Volume · Size = Number of Trading Pairs"
+        csvData={{ filename: 'exchange-trust-volume', headers: ['Exchange','TrustScore','Volume24h','Pairs','MarketShare%'], rows: marketShares.map(e => [e.name, e.trustScore, e.volume, e.pairs, e.share.toFixed(1)]) }}>
         <Plot
           data={[{
             x: marketShares.map(e => e.trustScore),
@@ -362,7 +363,8 @@ export default function MarketStructureTab() {
           </div>
         </div>
         <div className="lg:col-span-3">
-          <ChartCard title="Market Share by Exchange" subtitle="Top 10 exchanges by trading volume share">
+          <ChartCard title="Market Share by Exchange" subtitle="Top 10 exchanges by trading volume share"
+            csvData={{ filename: 'exchange-market-share', headers: ['Exchange','MarketShare%','Volume24h'], rows: marketShares.slice(0, 10).map(e => [e.name, e.share.toFixed(1), e.volume]) }}>
             <Plot
               data={[{
                 x: marketShares.slice(0, 10).map(e => e.name),
@@ -393,7 +395,8 @@ export default function MarketStructureTab() {
       </div>
 
       {/* Top Coins by Volume */}
-      <ChartCard title="Top Coins by 24h Trading Volume" subtitle="Top 20 cryptocurrencies by trading volume · CoinGecko Pro">
+      <ChartCard title="Top Coins by 24h Trading Volume" subtitle="Top 20 cryptocurrencies by trading volume · CoinGecko Pro"
+        csvData={{ filename: 'top-coins-volume', headers: ['Symbol','Name','Volume24h'], rows: topCoinsByVolume.map(c => [c.symbol?.toUpperCase(), c.name, c.total_volume]) }}>
         <Plot
           data={[{
             x: topCoinsByVolume.map(c => c.symbol?.toUpperCase() || c.name),
@@ -418,7 +421,8 @@ export default function MarketStructureTab() {
 
       {/* Bridge Volume */}
       {topBridges.length > 0 && (
-        <ChartCard title="Bridge Volume — Top 15" subtitle="Cross-chain bridge 24h volume · DeFiLlama">
+        <ChartCard title="Bridge Volume — Top 15" subtitle="Cross-chain bridge 24h volume · DeFiLlama"
+          csvData={{ filename: 'bridge-volume', headers: ['Bridge','Volume24h'], rows: topBridges.map(b => [b.displayName || b.name, b.lastDayVolume]) }}>
           <Plot
             data={[{
               x: topBridges.map(b => b.displayName || b.name),
@@ -443,7 +447,8 @@ export default function MarketStructureTab() {
 
       {/* Top Derivatives Protocols */}
       {derivativesProtocols.length > 0 && (
-        <ChartCard title="Derivatives Protocols — Top 15" subtitle="Perpetual & options protocols by 24h volume · DeFiLlama">
+        <ChartCard title="Derivatives Protocols — Top 15" subtitle="Perpetual & options protocols by 24h volume · DeFiLlama"
+          csvData={{ filename: 'derivatives-protocols', headers: ['Protocol','Volume24h'], rows: derivativesProtocols.slice(0, 15).map(p => [p.displayName || p.name, p.total24h]) }}>
           <Plot
             data={[{
               x: derivativesProtocols.slice(0, 15).map(p => p.displayName || p.name),

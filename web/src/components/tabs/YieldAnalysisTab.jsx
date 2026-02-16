@@ -135,7 +135,8 @@ export default function YieldAnalysisTab() {
       </div>
 
       {/* Yield Distribution Histogram */}
-      <ChartCard title="Yield Distribution" subtitle="Number of pools and TVL by APY range">
+      <ChartCard title="Yield Distribution" subtitle="Number of pools and TVL by APY range"
+        csvData={{ filename: 'yield-distribution', headers: ['APY_Range','PoolCount','TVL_USD'], rows: buckets.map(b => [b.label, b.count, b.tvl]) }}>
         <Plot
           data={[
             {
@@ -177,7 +178,8 @@ export default function YieldAnalysisTab() {
       </ChartCard>
 
       {/* Yield by Chain - Box Plot Style */}
-      <ChartCard title="Yield by Chain" subtitle="APY distribution per chain (median, quartiles) — top chains by pool count">
+      <ChartCard title="Yield by Chain" subtitle="APY distribution per chain (median, quartiles) — top chains by pool count"
+        csvData={{ filename: 'yield-by-chain', headers: ['Chain','Min','Q1','Median','Q3','Max','PoolCount'], rows: chainStats.map(c => [c.chain, c.min.toFixed(1), c.q1.toFixed(1), c.median.toFixed(1), c.q3.toFixed(1), c.max.toFixed(1), c.count]) }}>
         <Plot
           data={[
             // Whiskers (min to max)
@@ -243,7 +245,8 @@ export default function YieldAnalysisTab() {
       </ChartCard>
 
       {/* Stablecoin Yields vs Treasury */}
-      <ChartCard title="Stablecoin Yields vs Treasury" subtitle="Each dot = a stablecoin lending pool · Red = below risk-free rate">
+      <ChartCard title="Stablecoin Yields vs Treasury" subtitle="Each dot = a stablecoin lending pool · Red = below risk-free rate"
+        csvData={{ filename: 'stablecoin-yields', headers: ['Pool','Chain','APY','TVL','AboveTreasury'], rows: stablecoinScatter.map(p => [p.symbol || p.pool, p.chain, p.apy.toFixed(2), p.tvlUsd, p.apy >= treasuryYield ? 'Yes' : 'No']) }}>
         <Plot
           data={[
             {
@@ -308,7 +311,8 @@ export default function YieldAnalysisTab() {
       </ChartCard>
 
       {/* Yield vs TVL Scatter */}
-      <ChartCard title="Yield vs TVL" subtitle="Larger pools typically offer lower yields — the yield-size tradeoff">
+      <ChartCard title="Yield vs TVL" subtitle="Larger pools typically offer lower yields — the yield-size tradeoff"
+        csvData={{ filename: 'yield-vs-tvl', headers: ['Pool','Chain','APY','TVL','Stablecoin'], rows: yieldTvlPools.map(p => [p.symbol || p.pool, p.chain, p.apy.toFixed(2), p.tvlUsd, p.stablecoin ? 'Yes' : 'No']) }}>
         <Plot
           data={[
             {
@@ -337,7 +341,8 @@ export default function YieldAnalysisTab() {
       </ChartCard>
 
       {/* Top Yield Opportunities */}
-      <ChartCard title="Top Yield Opportunities" subtitle="Highest APY pools with TVL > $1M — filter out low-liquidity spam">
+      <ChartCard title="Top Yield Opportunities" subtitle="Highest APY pools with TVL > $1M — filter out low-liquidity spam"
+        csvData={{ filename: 'top-yield-opportunities', headers: ['Pool','Chain','APY','TVL'], rows: topYieldPools.map(p => [p.symbol || p.pool, p.chain, p.apy.toFixed(2), p.tvlUsd]) }}>
         <Plot
           data={[
             {

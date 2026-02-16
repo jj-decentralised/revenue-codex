@@ -209,7 +209,8 @@ export default function ValuationsTab() {
         <KPICard title="Rev–Price R²" value={rSquared !== null ? rSquared.toFixed(3) : '—'} subtitle={`${corrPeriod} correlation`} />
       </div>
 
-      <ChartCard title="Top 30 Protocol Fees (24h)" subtitle={`Daily fees — ${topProtocols.length.toLocaleString()} fee-earning protocols`}>
+      <ChartCard title="Top 30 Protocol Fees (24h)" subtitle={`Daily fees — ${topProtocols.length.toLocaleString()} fee-earning protocols`}
+        csvData={{ filename: 'top30-protocol-fees', headers: ['Protocol','Fees24h','Revenue24h','Fees7d','Fees30d','AnnualizedFees','MarketCap','TVL','TakeRate','Sector','PS_Ratio'], rows: top30.map(p => [p.name, p.fees24h, p.revenue24h, p.fees7d, p.fees30d, p.annualizedFees, p.mcap, p.tvl, p.takeRate, p.sector, p.psRatio]) }}>
         <div className="flex items-center gap-3 mb-3">
           <label className="flex items-center gap-2 text-xs text-(--color-text-secondary) cursor-pointer">
             <input type="checkbox" checked={showStablecoins} onChange={e => setShowStablecoins(e.target.checked)} className="rounded" />
@@ -228,7 +229,8 @@ export default function ValuationsTab() {
       </ChartCard>
 
       {/* P/S Scatter — ALL protocols */}
-      <ChartCard title="Fees vs Market Cap — P/S Scatter" subtitle={`${scatterProtocols.length} protocols · Bubble = TVL · Color = Sector · Log scale`}>
+      <ChartCard title="Fees vs Market Cap — P/S Scatter" subtitle={`${scatterProtocols.length} protocols · Bubble = TVL · Color = Sector · Log scale`}
+        csvData={{ filename: 'ps-scatter', headers: ['Protocol','AnnualizedFees','MarketCap','TVL','PS_Ratio','TakeRate','Sector'], rows: scatterProtocols.map(p => [p.name, p.annualizedFees, p.mcap, p.tvl, p.psRatio, p.takeRate, p.sector]) }}>
         <div className="flex items-center gap-3 mb-3">
           <label className="text-xs text-(--color-text-secondary)">Sector:</label>
           <select value={selectedSector} onChange={e => setSelectedSector(e.target.value)}
@@ -259,7 +261,8 @@ export default function ValuationsTab() {
 
       {/* Revenue–Price Correlation */}
       <ChartCard title="Fee Growth vs Price Growth — Correlation"
-        subtitle={`Does rising revenue affect price? ${corrData.length} protocols · R² = ${rSquared !== null ? rSquared.toFixed(3) : 'N/A'}`}>
+        subtitle={`Does rising revenue affect price? ${corrData.length} protocols · R² = ${rSquared !== null ? rSquared.toFixed(3) : 'N/A'}`}
+        csvData={{ filename: `fee-price-correlation-${corrPeriod}`, headers: ['Protocol','Sector','FeeChange%','PriceChange%'], rows: corrData.map(d => [d.name, d.sector, d.revChange, d.priceChange]) }}>
         <div className="flex items-center gap-3 mb-3">
           <label className="text-xs text-(--color-text-secondary)">Period:</label>
           <div className="flex rounded-md border border-(--color-border) overflow-hidden">
