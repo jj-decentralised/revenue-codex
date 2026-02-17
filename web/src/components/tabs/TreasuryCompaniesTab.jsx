@@ -593,10 +593,16 @@ export default function TreasuryCompaniesTab() {
         if (traces.length === 0) return null
         let mcapTickCfg = {}
         if (mcapView !== 'indexed') { let yMax = 0; traces.forEach(t => { if (t.visible === true) t.y.forEach(v => { if (v > yMax) yMax = v }) }); if (yMax > 0) mcapTickCfg = buildFinancialTicks([0, yMax]) }
+        // Build full time-series CSV: Date | Ticker1 | Ticker2 | ...
+        const csvTickers = traces.map(t => t.name)
+        const allDatesSet = new Set(); traces.forEach(t => t.x.forEach(d => allDatesSet.add(d)))
+        const allDatesSorted = [...allDatesSet].sort()
+        const dateValueMaps = traces.map(t => { const m = new Map(); t.x.forEach((d, i) => m.set(d, t.y[i])); return m })
+        const csvRows = allDatesSorted.map(date => [date, ...dateValueMaps.map(m => { const v = m.get(date); return v != null ? (mcapView === 'indexed' ? v.toFixed(1) : v.toFixed(0)) : '' })])
         return (
           <ChartCard title={mcapView === 'indexed' ? 'Treasury Companies: Indexed Performance (Base 100)' : 'Treasury Companies: Market Cap'}
             subtitle={`${traces.length} stocks — Source: Massive.com`}
-            csvData={{ filename: `treasury-${mcapView}-${mcapRange}`, headers: ['Ticker', 'Value'], rows: tickersBySize.map(({ ticker, mcap }) => [ticker, mcap.toFixed(0)]) }}>
+            csvData={{ filename: `treasury-${mcapView}-${mcapRange}`, headers: ['Date', ...csvTickers], rows: csvRows }}>
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <div className="flex rounded-md border border-(--color-rule) overflow-hidden">
                 {[['mcap', 'Market Cap'], ['indexed', 'Indexed (100)']].map(([k, l]) => (
