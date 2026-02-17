@@ -13,8 +13,27 @@ function toStockTicker(cgSymbol) {
   return cgSymbol.replace(/\.\w+$/, '').toUpperCase()
 }
 
-// Top treasury companies to fetch stock data for (most liquid / most BTC)
-const STOCK_TICKERS = ['MSTR', 'MARA', 'CLSK', 'RIOT', 'COIN', 'HUT', 'BTBT', 'BITF', 'CIFR', 'CORZ']
+// All known crypto treasury company tickers
+const TREASURY_TICKERS = [
+  'MSTR', 'BMNR', 'XXI', 'SBET', 'ETHM', 'PURR', 'BTBT', 'ASST', 'FWDI',
+  'MBAV', 'FGNX', 'CEPO', 'BRR', 'BNC', 'NAKA', 'DFDV', 'SUIG', 'SLMT',
+  'HSDT', 'BTCS', 'ETHZ', 'SQNS', 'UPXI', 'STSS', 'HYPD', 'WGRX', 'STKE',
+  'GAME', 'VVPR', 'BNKK', 'PAPL', 'SLAI', 'WETO', 'IPST', 'SBLX', 'NVVE',
+  'LGHL', 'AGRI', 'MARA', 'CLSK', 'RIOT', 'COIN', 'HUT', 'BITF', 'CIFR', 'CORZ',
+]
+
+// Extended color palette for 40+ tickers
+const EXT_PALETTE = [
+  '#2E5E8E', '#E88C30', '#2E7D4F', '#C1352D', '#6B5B8D',
+  '#1A7F8F', '#B5465A', '#4E5BA6', '#B8860B', '#64748B',
+  '#D97706', '#059669', '#7C3AED', '#DC2626', '#0891B2',
+  '#EA580C', '#4338CA', '#15803D', '#BE185D', '#0369A1',
+  '#A16207', '#6D28D9', '#047857', '#9F1239', '#1D4ED8',
+  '#92400E', '#5B21B6', '#065F46', '#881337', '#1E40AF',
+  '#78350F', '#4C1D95', '#064E3B', '#7F1D1D', '#1E3A5F',
+  '#713F12', '#3B0764', '#022C22', '#B91C1C', '#0E7490',
+  '#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+]
 
 // Date helpers
 function daysAgo(n) {
@@ -38,25 +57,23 @@ async function fetchTreasuryData() {
     fetch('/api/coingecko?action=coin_chart&coin_id=bitcoin&days=365').then(parseJSON).catch(() => null),
   ])
 
-  // Phase 2: Massive.com stock data — ticker details + 365d price history
-  // Only fetch for tickers that appear in the treasury data
+  // Phase 2: Massive.com stock data — ticker details + history back to 2023
   const btcCompanies = btcTreasury?.companies || []
-  const knownTickers = new Set(STOCK_TICKERS)
+  const knownTickers = new Set(TREASURY_TICKERS)
   btcCompanies.forEach(c => {
     const t = toStockTicker(c.symbol)
     if (t) knownTickers.add(t)
   })
 
-  // Limit to top tickers to avoid rate limits
-  const tickersToFetch = [...knownTickers].slice(0, 20)
-  const from365 = daysAgo(365)
+  const tickersToFetch = [...knownTickers]
+  const fromDate = '2023-01-01'
   const today = daysAgo(0)
 
   const detailPromises = tickersToFetch.map(t =>
     fetch(`/api/massive?action=ticker_details&ticker=${t}`).then(parseJSON).catch(() => null)
   )
   const aggsPromises = tickersToFetch.map(t =>
-    fetch(`/api/massive?action=aggs&ticker=${t}&from=${from365}&to=${today}`).then(parseJSON).catch(() => null)
+    fetch(`/api/massive?action=aggs&ticker=${t}&from=${fromDate}&to=${today}`).then(parseJSON).catch(() => null)
   )
 
   const [detailResults, aggsResults] = await Promise.all([
@@ -94,6 +111,8 @@ export default function TreasuryCompaniesTab() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [mcapView, setMcapView] = useState('mcap') // 'mcap' | 'indexed'
+  const [mcapRange, setMcapRange] = useState('ALL') // '3M' | '6M' | '1Y' | '2Y' | 'ALL'
 
   useEffect(() => {
     fetchTreasuryData()
@@ -614,6 +633,151 @@ export default function TreasuryCompaniesTab() {
           />
         </ChartCard>
       )}
+
+      {/* ─── Market Cap / Indexed Performance Chart ─────────────────────── */}
+      {(() => {
+        const allTickerAggs = data?.tickerAggs || {}
+        const allTickerDetails = data?.tickerDetails || {}
+        const availableTickers = Object.keys(allTickerAggs).filter(t => allTickerAggs[t]?.length > 5)
+
+        if (availableTickers.length === 0) return null
+
+        // Time range filter
+        const rangeMap = { '3M': 90, '6M': 180, '1Y': 365, '2Y': 730, 'ALL': 9999 }
+        const rangeDays = rangeMap[mcapRange] || 9999
+        const cutoffDate = new Date()
+        cutoffDate.setDate(cutoffDate.getDate() - rangeDays)
+        const cutoffTs = cutoffDate.getTime()
+
+        // Sort tickers by latest market cap
+        const tickersBySize = availableTickers
+          .map(t => {
+            const bars = allTickerAggs[t]
+            const lastClose = bars[bars.length - 1]?.c || 0
+            const shares = allTickerDetails[t]?.share_class_shares_outstanding
+              || allTickerDetails[t]?.weighted_shares_outstanding || 0
+            return { ticker: t, mcap: lastClose * shares, lastClose }
+          })
+          .sort((a, b) => b.mcap - a.mcap)
+
+        const traces = tickersBySize.map(({ ticker }, i) => {
+          const bars = allTickerAggs[ticker]
+          const details = allTickerDetails[ticker]
+          const sharesOut = details?.share_class_shares_outstanding
+            || details?.weighted_shares_outstanding || 1
+
+          const filtered = bars.filter(b => b.t >= cutoffTs)
+          if (filtered.length < 2) return null
+
+          const baseClose = filtered[0]?.c || 1
+          const dates = filtered.map(b => new Date(b.t).toISOString().split('T')[0])
+          const values = mcapView === 'indexed'
+            ? filtered.map(b => (b.c / baseClose) * 100)
+            : filtered.map(b => b.c * sharesOut)
+
+          // Show top 10 by default, rest hidden in legend
+          const visible = i < 10 ? true : 'legendonly'
+
+          return {
+            x: dates,
+            y: values,
+            type: 'scatter',
+            mode: 'lines',
+            name: ticker,
+            line: { color: EXT_PALETTE[i % EXT_PALETTE.length], width: i === 0 ? 2.5 : 1.5 },
+            visible,
+            hovertemplate: mcapView === 'indexed'
+              ? `${ticker}: %{y:.1f}<extra></extra>`
+              : `${ticker}: $%{y:,.0f}<extra></extra>`,
+          }
+        }).filter(Boolean)
+
+        if (traces.length === 0) return null
+
+        const yTitle = mcapView === 'indexed' ? 'Indexed Value (100 = Start)' : 'Market Cap (USD)'
+        const yFormat = mcapView === 'indexed' ? '' : '$,.2s'
+
+        return (
+          <ChartCard
+            title={mcapView === 'indexed'
+              ? 'Crypto Treasury Companies: Indexed Performance (Base 100)'
+              : 'Crypto Treasury Companies: Market Cap'}
+            subtitle={`${traces.length} treasury company stocks — ${mcapView === 'indexed' ? 'Indexed to 100 at start of period' : 'Price × shares outstanding'} — Source: Massive.com`}
+            csvData={{
+              filename: `treasury-${mcapView}-${mcapRange}`,
+              headers: ['Ticker', 'Latest_Value'],
+              rows: tickersBySize.filter(t => allTickerAggs[t.ticker]?.length > 5).map(({ ticker, mcap }) => [ticker, mcap.toFixed(0)]),
+            }}
+          >
+            {/* Controls */}
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              {/* View toggle */}
+              <div className="flex rounded-md border border-(--color-rule) overflow-hidden">
+                {[['mcap', 'Market Cap'], ['indexed', 'Indexed (100)']].map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setMcapView(key)}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                      mcapView === key
+                        ? 'bg-(--color-primary) text-white'
+                        : 'text-(--color-text-secondary) hover:bg-(--color-paper-alt)'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {/* Time range */}
+              <div className="flex rounded-md border border-(--color-rule) overflow-hidden">
+                {['3M', '6M', '1Y', '2Y', 'ALL'].map(range => (
+                  <button
+                    key={range}
+                    onClick={() => setMcapRange(range)}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                      mcapRange === range
+                        ? 'bg-(--color-primary) text-white'
+                        : 'text-(--color-text-secondary) hover:bg-(--color-paper-alt)'
+                    }`}
+                  >
+                    {range}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Plot
+              data={traces}
+              layout={{
+                ...defaultLayout,
+                height: 550,
+                yaxis: { ...defaultLayout.yaxis, title: yTitle, tickformat: yFormat },
+                xaxis: {
+                  ...defaultLayout.xaxis,
+                  rangeslider: { visible: true, thickness: 0.06 },
+                },
+                legend: {
+                  ...defaultLayout.legend,
+                  orientation: 'v',
+                  x: 1.02,
+                  y: 1,
+                  font: { size: 10 },
+                },
+                margin: { t: 10, r: 120, b: 60, l: 70 },
+                ...(mcapView === 'indexed' ? {
+                  shapes: [{
+                    type: 'line',
+                    x0: traces[0]?.x?.[0],
+                    x1: traces[0]?.x?.[traces[0].x.length - 1],
+                    y0: 100, y1: 100,
+                    line: { color: '#999', width: 1, dash: 'dash' },
+                  }],
+                } : {}),
+              }}
+              config={defaultConfig}
+              className="w-full"
+            />
+          </ChartCard>
+        )
+      })()}
 
       {/* Narrative */}
       <NarrativeBox title="Treasury Company Analysis">
