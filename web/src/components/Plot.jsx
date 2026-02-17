@@ -43,6 +43,13 @@ export const defaultConfig = {
   displayModeBar: true,
   displaylogo: false,
   modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d'],
+  toImageButtonOptions: {
+    format: 'jpeg',
+    filename: 'revenue-codex-chart',
+    height: 800,
+    width: 1200,
+    scale: 2,
+  },
   responsive: true,
 }
 

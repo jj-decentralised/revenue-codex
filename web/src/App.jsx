@@ -28,6 +28,7 @@ const StablecoinFlowsTab = lazy(() => import('./components/tabs/StablecoinFlowsT
 const RevenueScoreTab = lazy(() => import('./components/tabs/RevenueScoreTab'))
 const SocialIntelligenceTab = lazy(() => import('./components/tabs/SocialIntelligenceTab'))
 const BubbleComparisonTab = lazy(() => import('./components/tabs/BubbleComparisonTab'))
+const TreasuryCompaniesTab = lazy(() => import('./components/tabs/TreasuryCompaniesTab'))
 
 const TABS = [
   // Group 1: Revenue Fundamentals
@@ -44,6 +45,7 @@ const TABS = [
   { id: 'derivatives', label: 'Derivatives Intelligence', group: 'Market Intelligence' },
   { id: 'yield', label: 'Yield Analysis', group: 'Market Intelligence' },
   { id: 'social', label: 'Social Intelligence', group: 'Market Intelligence' },
+  { id: 'treasury', label: 'Treasury Companies', group: 'Market Intelligence' },
   // Group 4: Macro & On-Chain
   { id: 'macro', label: 'Macro Correlations', group: 'Macro & On-Chain' },
   { id: 'onchain', label: 'On-Chain Economy', group: 'Macro & On-Chain' },
@@ -82,6 +84,7 @@ const TAB_COMPONENTS = {
   mevstudy: MEVStudyTab,
   stablecoins: StablecoinFlowsTab,
   bubblecomp: BubbleComparisonTab,
+  treasury: TreasuryCompaniesTab,
 }
 
 export default function App() {
