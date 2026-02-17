@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'MASSIVE_API_KEY not configured' });
   }
 
-  const { action, ticker, from, to, timespan, multiplier } = req.query;
+  const { action, ticker, tickers, from, to, timespan, multiplier } = req.query;
 
   if (!action) {
     return res.status(400).json({
@@ -63,9 +63,30 @@ export default async function handler(req, res) {
       break;
     }
 
+    case 'snapshot_tickers': {
+      endpoint = `/v2/snapshot/locale/us/markets/stocks/tickers${tickers ? `?tickers=${encodeURIComponent(tickers)}` : ''}`;
+      break;
+    }
+
+    case 'dividends': {
+      if (!ticker) {
+        return res.status(400).json({ error: 'ticker is required for dividends action' });
+      }
+      endpoint = `/v3/reference/dividends?ticker=${encodeURIComponent(ticker)}&limit=50&order=desc&sort=ex_dividend_date`;
+      break;
+    }
+
+    case 'splits': {
+      if (!ticker) {
+        return res.status(400).json({ error: 'ticker is required for splits action' });
+      }
+      endpoint = `/v3/reference/splits?ticker=${encodeURIComponent(ticker)}&limit=50&order=desc&sort=execution_date`;
+      break;
+    }
+
     default:
       return res.status(400).json({
-        error: 'Invalid action. Supported: aggs, prev_close, ticker_details, snapshot, financials',
+        error: 'Invalid action. Supported: aggs, prev_close, ticker_details, snapshot, financials, snapshot_tickers, dividends, splits',
       });
   }
 
