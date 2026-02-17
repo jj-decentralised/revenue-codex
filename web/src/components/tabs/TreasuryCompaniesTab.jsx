@@ -35,6 +35,48 @@ const EXT_PALETTE = [
   '#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
 ]
 
+// Company classification for mNAV context
+const COMPANY_CATEGORY = {
+  'MSTR': 'Treasury', 'XXI': 'Treasury', 'SBET': 'Treasury', 'BMNR': 'Treasury',
+  'BRR': 'Treasury', 'BTCS': 'Treasury', 'PURR': 'Treasury', 'ETHM': 'Treasury',
+  'FWDI': 'Treasury', 'CEPO': 'Treasury', 'BNC': 'Treasury', 'NAKA': 'Treasury',
+  'DFDV': 'Treasury', 'SUIG': 'Treasury', 'SLMT': 'Treasury', 'HSDT': 'Treasury',
+  'STSS': 'Treasury', 'HYPD': 'Treasury', 'STKE': 'Treasury', 'WGRX': 'Treasury',
+  'SQNS': 'Treasury', 'ETHZ': 'Treasury', 'UPXI': 'Treasury',
+  'MARA': 'Miner', 'RIOT': 'Miner', 'CLSK': 'Miner', 'CIFR': 'Miner',
+  'HUT': 'Miner', 'BITF': 'Miner', 'CORZ': 'Miner', 'BTBT': 'Miner',
+  'COIN': 'Exchange',
+}
+const CATEGORY_COLORS = {
+  'Treasury': '#2E5E8E',
+  'Miner': '#B8860B',
+  'Exchange': '#6B5B8D',
+  'Other': '#64748B',
+}
+function getCategory(ticker) { return COMPANY_CATEGORY[ticker] || 'Other' }
+
+// Generate axis ticks using $B/$M/$K notation instead of D3's $G/$M/$k
+function buildFinancialTicks(values) {
+  if (!values || !values.length) return {}
+  const max = Math.max(...values)
+  const min = Math.min(...values, 0)
+  const range = max - min
+  if (range === 0) return {}
+  const rawStep = range / 6
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)))
+  const residual = rawStep / mag
+  const niceStep = residual <= 1 ? mag : residual <= 2 ? 2 * mag : residual <= 5 ? 5 * mag : 10 * mag
+  const tickvals = []
+  const start = Math.floor(min / niceStep) * niceStep
+  for (let v = start; v <= max + niceStep * 0.1; v += niceStep) {
+    tickvals.push(v)
+  }
+  return {
+    tickvals,
+    ticktext: tickvals.map(v => v < 0 ? '-' + formatCurrency(Math.abs(v)) : formatCurrency(v)),
+  }
+}
+
 // Date helpers
 function daysAgo(n) {
   const d = new Date()
@@ -50,11 +92,15 @@ async function fetchTreasuryData() {
     return r.json()
   }
 
+  // Match BTC price history range to stock data range (from 2023-01-01)
+  const fromDate = '2023-01-01'
+  const daysSinceStart = Math.ceil((Date.now() - new Date(fromDate).getTime()) / 86400000)
+
   // Phase 1: CoinGecko treasury + BTC price history (parallel)
   const [btcTreasury, ethTreasury, btcChart] = await Promise.all([
     fetch('/api/coingecko?action=public_treasury_btc').then(parseJSON).catch(() => null),
     fetch('/api/coingecko?action=public_treasury_eth').then(parseJSON).catch(() => null),
-    fetch('/api/coingecko?action=coin_chart&coin_id=bitcoin&days=365').then(parseJSON).catch(() => null),
+    fetch(`/api/coingecko?action=coin_chart&coin_id=bitcoin&days=${daysSinceStart}`).then(parseJSON).catch(() => null),
   ])
 
   // Phase 2: Massive.com stock data — ticker details + history back to 2023
@@ -66,7 +112,6 @@ async function fetchTreasuryData() {
   })
 
   const tickersToFetch = [...knownTickers]
-  const fromDate = '2023-01-01'
   const today = daysAgo(0)
 
   const detailPromises = tickersToFetch.map(t =>
@@ -194,10 +239,15 @@ export default function TreasuryCompaniesTab() {
 
   // ─── Chart 5: Premium to NAV ───────────────────────────────────────────────
 
-  const premiumData = enrichedBtcCompanies
+  const allPremiums = enrichedBtcCompanies
     .filter(c => c.premiumToNAV !== null)
     .sort((a, b) => (b.premiumToNAV || 0) - (a.premiumToNAV || 0))
-    .slice(0, 15)
+  // Show top 10 premiums AND bottom 5 discounts for full picture
+  const premiumData = [
+    ...allPremiums.slice(0, 10),
+    ...allPremiums.filter(c => c.premiumToNAV < 0).slice(-5),
+  ].filter((c, i, arr) => arr.findIndex(x => x.symbol === c.symbol) === i)
+    .sort((a, b) => (b.premiumToNAV || 0) - (a.premiumToNAV || 0))
   const premiumChartData = [...premiumData].reverse()
 
   // ─── Chart 6: Stock Performance vs BTC (normalized) ────────────────────────
@@ -241,9 +291,10 @@ export default function TreasuryCompaniesTab() {
   // ─── Chart 7: Cost Basis Analysis ──────────────────────────────────────────
 
   const withCostBasis = enrichedBtcCompanies
-    .filter(c => c.costBasis && c.costBasis > 0 && c.total_holdings > 100)
+    .filter(c => c.costBasis && c.costBasis > 1000 && c.total_holdings > 100)
     .sort((a, b) => a.costBasis - b.costBasis)
     .slice(0, 20)
+  const costBasisChartData = [...withCostBasis].reverse()
 
   // ─── Chart 8: ETH Treasury Holdings ────────────────────────────────────────
 
@@ -259,6 +310,19 @@ export default function TreasuryCompaniesTab() {
   const hasMassiveData = Object.keys(data?.tickerDetails || {}).length > 0
   const hasAggsData = Object.keys(data?.tickerAggs || {}).length > 0
 
+  // Precomputed financial-notation axis ticks ($B/$M instead of $G)
+  const holdingsValueTicks = buildFinancialTicks(valueChartData.map(c => c.holdingsValue))
+  const navTicks = buildFinancialTicks(navTimeSeries.map(d => d.nav))
+  const premiumTicks = buildFinancialTicks(premiumChartData.map(c => c.premiumToNAV))
+
+  // Dynamic Stock Performance title based on actual date range
+  const fmtPerfDate = d => new Date(d).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  const stockPerfStart = stockPerformanceTraces[0]?.x?.[0]
+  const stockPerfEnd = stockPerformanceTraces[0]?.x?.[stockPerformanceTraces[0]?.x?.length - 1]
+  const stockPerfTitle = stockPerfStart && stockPerfEnd
+    ? `Stock Performance vs BTC (${fmtPerfDate(stockPerfStart)} — ${fmtPerfDate(stockPerfEnd)})`
+    : 'Stock Performance vs BTC'
+
   return (
     <div className="space-y-6">
       {/* KPIs */}
@@ -266,7 +330,7 @@ export default function TreasuryCompaniesTab() {
         <KPICard
           title="Total BTC Held"
           value={formatNumber(totalBtcHeld, 0)}
-          subtitle={`${btcSupplyPct.toFixed(2)}% of supply`}
+          subtitle={`${btcSupplyPct.toFixed(2)}% of supply (CoinGecko)`}
         />
         <KPICard
           title="Total Holdings Value"
@@ -325,7 +389,7 @@ export default function TreasuryCompaniesTab() {
             ...defaultLayout,
             height: Math.max(500, holdingsChartData.length * 28 + 80),
             margin: { t: 10, r: 100, b: 40, l: 10 },
-            xaxis: { ...defaultLayout.xaxis, title: 'BTC Holdings' },
+            xaxis: { ...defaultLayout.xaxis, title: 'BTC Holdings', type: 'linear' },
             yaxis: { ...defaultLayout.yaxis, automargin: true },
             bargap: 0.15,
           }}
@@ -364,7 +428,7 @@ export default function TreasuryCompaniesTab() {
             ...defaultLayout,
             height: Math.max(500, valueChartData.length * 28 + 80),
             margin: { t: 10, r: 100, b: 40, l: 10 },
-            xaxis: { ...defaultLayout.xaxis, title: 'Holdings Value (USD)', tickformat: '$,.2s' },
+            xaxis: { ...defaultLayout.xaxis, title: 'Holdings Value (USD)', type: 'linear', ...holdingsValueTicks },
             yaxis: { ...defaultLayout.yaxis, automargin: true },
             bargap: 0.15,
           }}
@@ -377,26 +441,21 @@ export default function TreasuryCompaniesTab() {
       {withMNAV.length > 0 && (
         <ChartCard
           title="mNAV by Company (Market Cap / Holdings Value)"
-          subtitle="Companies trading above 1.0x are at a premium to their crypto holdings — Source: Massive.com + CoinGecko"
+          subtitle="Market cap / holdings value — colored by type: Treasury (blue), Miner (gold), Exchange (purple), Other (gray) — Source: Massive.com + CoinGecko"
           csvData={{
             filename: 'mnav-by-company',
-            headers: ['Company', 'Ticker', 'mNAV', 'Market_Cap', 'Holdings_Value'],
-            rows: mnavSorted.map(c => [c.name, c.ticker, c.mNAV?.toFixed(2), c.stockMcap?.toFixed(0), c.holdingsValue?.toFixed(0)]),
+            headers: ['Company', 'Ticker', 'Category', 'mNAV', 'Market_Cap', 'Holdings_Value'],
+            rows: mnavSorted.map(c => [c.name, c.ticker, getCategory(c.ticker), c.mNAV?.toFixed(2), c.stockMcap?.toFixed(0), c.holdingsValue?.toFixed(0)]),
           }}
         >
           <Plot
             data={[{
-              y: mnavChartData.map(c => `${c.name} (${c.ticker})`),
+              y: mnavChartData.map(c => `${c.name} (${c.ticker}) [${getCategory(c.ticker)}]`),
               x: mnavChartData.map(c => c.mNAV),
               type: 'bar',
               orientation: 'h',
               marker: {
-                color: mnavChartData.map(c =>
-                  c.mNAV > 3 ? colors.danger :
-                  c.mNAV > 1.5 ? colors.warning :
-                  c.mNAV > 1 ? colors.success :
-                  colors.slate
-                ),
+                color: mnavChartData.map(c => CATEGORY_COLORS[getCategory(c.ticker)]),
                 line: { width: 0 },
               },
               text: mnavChartData.map(c => ` ${c.mNAV?.toFixed(2)}x`),
@@ -409,7 +468,7 @@ export default function TreasuryCompaniesTab() {
               ...defaultLayout,
               height: Math.max(400, mnavChartData.length * 28 + 80),
               margin: { t: 10, r: 80, b: 40, l: 10 },
-              xaxis: { ...defaultLayout.xaxis, title: 'mNAV Multiple' },
+              xaxis: { ...defaultLayout.xaxis, title: 'mNAV Multiple', type: 'linear' },
               yaxis: { ...defaultLayout.yaxis, automargin: true },
               shapes: [{
                 type: 'line', x0: 1, x1: 1, y0: -0.5, y1: mnavChartData.length - 0.5,
@@ -453,7 +512,7 @@ export default function TreasuryCompaniesTab() {
             layout={{
               ...defaultLayout,
               height: 400,
-              yaxis: { ...defaultLayout.yaxis, title: 'Aggregate NAV (USD)', tickformat: '$,.2s' },
+              yaxis: { ...defaultLayout.yaxis, title: 'Aggregate NAV (USD)', ...navTicks },
               xaxis: { ...defaultLayout.xaxis, title: '' },
             }}
             config={defaultConfig}
@@ -465,8 +524,8 @@ export default function TreasuryCompaniesTab() {
       {/* Chart 5: Premium to NAV */}
       {premiumData.length > 0 && (
         <ChartCard
-          title="Premium to NAV"
-          subtitle="Market cap minus crypto holdings value — positive = trading at premium — Source: Massive.com + CoinGecko"
+          title="Premium / Discount to NAV"
+          subtitle="Market cap minus holdings value — green = premium, red = discount — Source: Massive.com + CoinGecko"
           csvData={{
             filename: 'premium-to-nav',
             headers: ['Company', 'Ticker', 'Premium_USD', 'Market_Cap', 'Holdings_Value'],
@@ -495,7 +554,7 @@ export default function TreasuryCompaniesTab() {
               ...defaultLayout,
               height: Math.max(400, premiumChartData.length * 28 + 80),
               margin: { t: 10, r: 100, b: 40, l: 10 },
-              xaxis: { ...defaultLayout.xaxis, title: 'Premium to NAV (USD)', tickformat: '$,.2s' },
+              xaxis: { ...defaultLayout.xaxis, title: 'Premium / Discount to NAV (USD)', type: 'linear', ...premiumTicks },
               yaxis: { ...defaultLayout.yaxis, automargin: true },
               shapes: [{
                 type: 'line', x0: 0, x1: 0, y0: -0.5, y1: premiumChartData.length - 0.5,
@@ -512,7 +571,7 @@ export default function TreasuryCompaniesTab() {
       {/* Chart 6: Stock Performance vs BTC */}
       {stockPerformanceTraces.length > 1 && (
         <ChartCard
-          title="Stock Performance vs BTC (365 Days)"
+          title={stockPerfTitle}
           subtitle="Normalized returns — each line starts at 0% on day 1 — Source: Massive.com + CoinGecko"
           csvData={{
             filename: 'stock-vs-btc-performance',
@@ -540,52 +599,56 @@ export default function TreasuryCompaniesTab() {
       )}
 
       {/* Chart 7: Cost Basis Analysis */}
-      {withCostBasis.length > 0 && (
+      {costBasisChartData.length > 0 && (
         <ChartCard
           title="BTC Cost Basis by Company"
-          subtitle={`Average entry price per BTC vs current price ($${formatNumber(currentBtcPrice, 0)}) — Source: CoinGecko`}
+          subtitle={`Average entry price per BTC vs current ($${formatNumber(currentBtcPrice, 0)}) — holdings > 100 BTC, cost basis > $1K — Source: CoinGecko`}
           csvData={{
             filename: 'btc-cost-basis',
-            headers: ['Company', 'Symbol', 'Avg_Cost_Per_BTC', 'BTC_Held', 'Total_Entry_Value', 'Unrealized_PnL'],
+            headers: ['Company', 'Ticker', 'Avg_Cost_Per_BTC', 'BTC_Held', 'Total_Entry_Value', 'Unrealized_PnL'],
             rows: withCostBasis.map(c => [
-              c.name, c.symbol, c.costBasis?.toFixed(0), c.total_holdings,
+              c.name, c.ticker || c.symbol, c.costBasis?.toFixed(0), c.total_holdings,
               c.total_entry_value_usd?.toFixed(0),
               ((c.total_holdings * currentBtcPrice) - c.total_entry_value_usd)?.toFixed(0),
             ]),
           }}
         >
           <Plot
-            data={[
-              {
-                x: withCostBasis.map(c => c.name),
-                y: withCostBasis.map(c => c.costBasis),
-                type: 'bar',
-                name: 'Avg Cost Basis',
-                marker: {
-                  color: withCostBasis.map(c =>
-                    c.costBasis < currentBtcPrice ? colors.success : colors.danger
-                  ),
-                  line: { width: 0 },
-                },
-                hovertemplate: '%{x}<br>Cost Basis: $%{y:,.0f}<extra></extra>',
+            data={[{
+              y: costBasisChartData.map(c => `${c.name} (${c.ticker || c.symbol})`),
+              x: costBasisChartData.map(c => c.costBasis),
+              type: 'bar',
+              orientation: 'h',
+              marker: {
+                color: costBasisChartData.map(c =>
+                  c.costBasis < currentBtcPrice ? colors.success : colors.danger
+                ),
+                line: { width: 0 },
               },
-            ]}
+              text: costBasisChartData.map(c => ` $${formatNumber(c.costBasis, 0)}`),
+              textposition: 'outside',
+              textfont: { size: 10, color: '#374151' },
+              hovertemplate: '%{y}<br>Cost Basis: <b>$%{x:,.0f}</b><extra></extra>',
+              cliponaxis: false,
+            }]}
             layout={{
               ...defaultLayout,
-              height: 420,
-              xaxis: { ...defaultLayout.xaxis, tickangle: -45, type: 'category' },
-              yaxis: { ...defaultLayout.yaxis, title: 'Avg Cost per BTC (USD)', tickformat: '$,.0f' },
+              height: Math.max(400, costBasisChartData.length * 28 + 80),
+              margin: { t: 10, r: 100, b: 40, l: 10 },
+              xaxis: { ...defaultLayout.xaxis, title: 'Avg Cost per BTC (USD)', type: 'linear', tickformat: '$,.0f' },
+              yaxis: { ...defaultLayout.yaxis, automargin: true },
               shapes: [{
-                type: 'line', x0: -0.5, x1: withCostBasis.length - 0.5,
-                y0: currentBtcPrice, y1: currentBtcPrice,
+                type: 'line', x0: currentBtcPrice, x1: currentBtcPrice,
+                y0: -0.5, y1: costBasisChartData.length - 0.5,
                 line: { color: colors.warning, width: 2, dash: 'dash' },
               }],
               annotations: [{
-                x: withCostBasis.length - 1, y: currentBtcPrice,
+                x: currentBtcPrice, y: costBasisChartData.length - 0.5,
                 text: `Current BTC: $${formatNumber(currentBtcPrice, 0)}`,
                 showarrow: false, font: { size: 10, color: colors.warning },
-                yshift: 12,
+                xanchor: 'left', yanchor: 'bottom', xshift: 5,
               }],
+              bargap: 0.15,
             }}
             config={defaultConfig}
             className="w-full"
@@ -597,7 +660,7 @@ export default function TreasuryCompaniesTab() {
       {ethChartData.length > 0 && (
         <ChartCard
           title="ETH Treasury Holdings by Company"
-          subtitle={`${ethCompanies.length} companies holding ${formatNumber(totalEthHeld, 0)} ETH (${formatCurrency(totalEthValue)}) — Source: CoinGecko`}
+          subtitle={`Top ${ethChartData.length} of ${ethCompanies.length} companies — ${formatNumber(totalEthHeld, 0)} ETH (${formatCurrency(totalEthValue)}) total — Source: CoinGecko`}
           csvData={{
             filename: 'eth-treasury-holdings',
             headers: ['Company', 'Symbol', 'ETH_Held', 'Value_USD', 'Country'],
@@ -624,7 +687,7 @@ export default function TreasuryCompaniesTab() {
               ...defaultLayout,
               height: Math.max(400, ethChartData.length * 28 + 80),
               margin: { t: 10, r: 100, b: 40, l: 10 },
-              xaxis: { ...defaultLayout.xaxis, title: 'ETH Holdings' },
+              xaxis: { ...defaultLayout.xaxis, title: 'ETH Holdings', type: 'linear' },
               yaxis: { ...defaultLayout.yaxis, automargin: true },
               bargap: 0.15,
             }}
@@ -695,7 +758,12 @@ export default function TreasuryCompaniesTab() {
         if (traces.length === 0) return null
 
         const yTitle = mcapView === 'indexed' ? 'Indexed Value (100 = Start)' : 'Market Cap (USD)'
-        const yFormat = mcapView === 'indexed' ? '' : '$,.2s'
+        let mcapTickConfig = {}
+        if (mcapView !== 'indexed') {
+          let yMax = 0
+          traces.forEach(t => { if (t.visible === true) t.y.forEach(v => { if (v > yMax) yMax = v }) })
+          if (yMax > 0) mcapTickConfig = buildFinancialTicks([0, yMax])
+        }
 
         return (
           <ChartCard
@@ -749,7 +817,7 @@ export default function TreasuryCompaniesTab() {
               layout={{
                 ...defaultLayout,
                 height: 550,
-                yaxis: { ...defaultLayout.yaxis, title: yTitle, tickformat: yFormat },
+                yaxis: { ...defaultLayout.yaxis, title: yTitle, ...mcapTickConfig },
                 xaxis: {
                   ...defaultLayout.xaxis,
                   rangeslider: { visible: true, thickness: 0.06 },
